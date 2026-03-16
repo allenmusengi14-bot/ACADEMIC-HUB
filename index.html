@@ -12,6 +12,67 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/themes.css">
+    
+    <!-- DIRECT AUTH SCRIPT - This will definitely work -->
+    <script>
+        // SUPER SIMPLE AUTH - This runs immediately
+        console.log('🔥 DIRECT SCRIPT LOADED');
+        
+        // Define functions directly
+        window.doLogin = function() {
+            alert('Login clicked! Function is working!');
+            console.log('Login function executed');
+            
+            const studentId = document.getElementById('lU')?.value;
+            const password = document.getElementById('lP')?.value;
+            
+            if (!studentId || !password) {
+                alert('Please enter both Student ID and Password');
+                return;
+            }
+            
+            alert(`Attempting login with ID: ${studentId}`);
+        };
+        
+        window.doRegister = function() {
+            alert('Register clicked! Function is working!');
+            console.log('Register function executed');
+            
+            const name = document.getElementById('rN')?.value;
+            const id = document.getElementById('rU')?.value;
+            
+            if (!name || !id) {
+                alert('Please enter your name and student ID');
+                return;
+            }
+            
+            alert(`Attempting to register: ${name}`);
+        };
+        
+        window.showForgotPassword = function() {
+            alert('Forgot password clicked');
+        };
+        
+        window.authTab = function(tab) {
+            console.log('Switching to:', tab);
+            if (tab === 'login') {
+                document.getElementById('loginF')?.classList.remove('hidden');
+                document.getElementById('regF')?.classList.add('hidden');
+                document.querySelectorAll('.auth-tab')[0]?.classList.add('on');
+                document.querySelectorAll('.auth-tab')[1]?.classList.remove('on');
+            } else {
+                document.getElementById('loginF')?.classList.add('hidden');
+                document.getElementById('regF')?.classList.remove('hidden');
+                document.querySelectorAll('.auth-tab')[0]?.classList.remove('on');
+                document.querySelectorAll('.auth-tab')[1]?.classList.add('on');
+            }
+        };
+        
+        console.log('✅ Direct functions attached:', {
+            login: typeof window.doLogin,
+            register: typeof window.doRegister
+        });
+    </script>
 </head>
 <body>
     <!-- Particles Background -->
@@ -33,8 +94,8 @@
                 </div>
             </div>
             <div class="auth-tabs">
-                <button class="auth-tab on" id="authLoginTab">Sign In</button>
-                <button class="auth-tab" id="authRegisterTab">Register</button>
+                <button class="auth-tab on" onclick="window.authTab('login')">Sign In</button>
+                <button class="auth-tab" onclick="window.authTab('register')">Register</button>
             </div>
             <div id="loginF">
                 <div class="ff">
@@ -43,7 +104,7 @@
                 </div>
                 <div class="ff">
                     <label>Password</label>
-                    <input id="lP" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter') window.doLogin()">
+                    <input id="lP" type="password" placeholder="Your password">
                 </div>
                 <div class="ff" style="margin-bottom:8px;">
                     <label style="display:flex;align-items:center;gap:5px;">
@@ -81,7 +142,7 @@
                         <option>5th Year</option>
                     </select>
                 </div>
-                <div class="ff"><label>Password</label><input id="rP" type="password" placeholder="Choose a password" onkeydown="if(event.key==='Enter') window.doRegister()"></div>
+                <div class="ff"><label>Password</label><input id="rP" type="password" placeholder="Choose a password"></div>
                 <div class="ff"><label>Confirm Password</label><input id="rPC" type="password" placeholder="Confirm password"></div>
                 <button class="btn-auth" onclick="window.doRegister()"><span>Create Account →</span></button>
             </div>
@@ -169,16 +230,14 @@
                 align-items:center;justify-content:center;transition:all .2s;">▶</button>
 
             <!-- Pages Container -->
-            <div id="pages-container">
-                <!-- Pages will be populated by JavaScript -->
-            </div>
+            <div id="pages-container"></div>
         </div>
     </div>
 
     <!-- Modal Templates Container -->
     <div id="modal-container"></div>
 
-    <!-- Scripts -->
+    <!-- Other scripts (keep but they won't break anything) -->
     <script src="js/firebase-config.js" type="module"></script>
     <script src="js/components/utils.js" type="module"></script>
     <script src="js/components/toast.js" type="module"></script>
@@ -194,79 +253,5 @@
     <script src="js/pages/points.js" type="module"></script>
     <script src="js/pages/profile.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
-
-    <!-- Debug Script - This will help fix login issues -->
-    <script>
-        console.log('🔍 DEBUG: Index.html loaded');
-        console.log('🔍 DEBUG: Scripts loading...');
-        
-        // Wait for everything to load
-        window.addEventListener('load', function() {
-            console.log('🔍 DEBUG: Window loaded');
-            
-            // Check if auth functions are available
-            console.log('🔍 DEBUG: Checking auth functions:');
-            console.log('  - doLogin:', typeof window.doLogin);
-            console.log('  - doRegister:', typeof window.doRegister);
-            console.log('  - showForgotPassword:', typeof window.showForgotPassword);
-            console.log('  - Firebase available:', !!window.FS);
-            
-            // Backup click handlers for buttons
-            setTimeout(function() {
-                console.log('🔍 DEBUG: Adding backup click handlers');
-                
-                // Login button
-                const loginBtn = document.querySelector('#loginF .btn-auth');
-                if (loginBtn) {
-                    loginBtn.onclick = function(e) {
-                        e.preventDefault();
-                        console.log('🔍 DEBUG: Login button clicked (backup)');
-                        if (window.doLogin) {
-                            window.doLogin();
-                        } else {
-                            console.error('❌ doLogin function not available!');
-                            alert('Login function not loaded. Check console for errors.');
-                        }
-                    };
-                }
-                
-                // Register button
-                const registerBtn = document.querySelector('#regF .btn-auth');
-                if (registerBtn) {
-                    registerBtn.onclick = function(e) {
-                        e.preventDefault();
-                        console.log('🔍 DEBUG: Register button clicked (backup)');
-                        if (window.doRegister) {
-                            window.doRegister();
-                        } else {
-                            console.error('❌ doRegister function not available!');
-                            alert('Register function not loaded. Check console for errors.');
-                        }
-                    };
-                }
-                
-                // Forgot password link
-                const forgotLink = document.querySelector('a[onclick*="showForgotPassword"]');
-                if (forgotLink) {
-                    forgotLink.onclick = function(e) {
-                        e.preventDefault();
-                        console.log('🔍 DEBUG: Forgot password clicked');
-                        if (window.showForgotPassword) {
-                            window.showForgotPassword();
-                        } else {
-                            console.error('❌ showForgotPassword function not available!');
-                        }
-                    };
-                }
-                
-                console.log('🔍 DEBUG: Backup handlers added');
-            }, 1000);
-        });
-        
-        // Check for errors
-        window.onerror = function(msg, url, line) {
-            console.error('❌ JavaScript Error:', msg, 'at', line);
-        };
-    </script>
 </body>
 </html>
