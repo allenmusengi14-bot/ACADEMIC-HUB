@@ -194,5 +194,34 @@
     <script src="js/pages/points.js" type="module"></script>
     <script src="js/pages/profile.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
+    <script>
+  // Debug helper to check if functions are available
+  console.log('Checking auth functions:');
+  console.log('- doLogin:', typeof window.doLogin);
+  console.log('- doRegister:', typeof window.doRegister);
+  console.log('- authTab:', typeof window.authTab);
+  
+  // Add direct click handlers to buttons as backup
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
+    
+    // Backup click handlers
+    const loginBtn = document.querySelector('.btn-auth[onclick="doLogin()"]');
+    if (loginBtn) {
+      loginBtn.onclick = function(e) {
+        e.preventDefault();
+        window.doLogin();
+      };
+    }
+    
+    const registerBtn = document.querySelector('.btn-auth[onclick="doRegister()"]');
+    if (registerBtn) {
+      registerBtn.onclick = function(e) {
+        e.preventDefault();
+        window.doRegister();
+      };
+    }
+  });
+</script>
 </body>
 </html>
