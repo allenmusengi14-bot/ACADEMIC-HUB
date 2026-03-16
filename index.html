@@ -194,34 +194,79 @@
     <script src="js/pages/points.js" type="module"></script>
     <script src="js/pages/profile.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
+
+    <!-- Debug Script - This will help fix login issues -->
     <script>
-  // Debug helper to check if functions are available
-  console.log('Checking auth functions:');
-  console.log('- doLogin:', typeof window.doLogin);
-  console.log('- doRegister:', typeof window.doRegister);
-  console.log('- authTab:', typeof window.authTab);
-  
-  // Add direct click handlers to buttons as backup
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded');
-    
-    // Backup click handlers
-    const loginBtn = document.querySelector('.btn-auth[onclick="doLogin()"]');
-    if (loginBtn) {
-      loginBtn.onclick = function(e) {
-        e.preventDefault();
-        window.doLogin();
-      };
-    }
-    
-    const registerBtn = document.querySelector('.btn-auth[onclick="doRegister()"]');
-    if (registerBtn) {
-      registerBtn.onclick = function(e) {
-        e.preventDefault();
-        window.doRegister();
-      };
-    }
-  });
-</script>
+        console.log('🔍 DEBUG: Index.html loaded');
+        console.log('🔍 DEBUG: Scripts loading...');
+        
+        // Wait for everything to load
+        window.addEventListener('load', function() {
+            console.log('🔍 DEBUG: Window loaded');
+            
+            // Check if auth functions are available
+            console.log('🔍 DEBUG: Checking auth functions:');
+            console.log('  - doLogin:', typeof window.doLogin);
+            console.log('  - doRegister:', typeof window.doRegister);
+            console.log('  - showForgotPassword:', typeof window.showForgotPassword);
+            console.log('  - Firebase available:', !!window.FS);
+            
+            // Backup click handlers for buttons
+            setTimeout(function() {
+                console.log('🔍 DEBUG: Adding backup click handlers');
+                
+                // Login button
+                const loginBtn = document.querySelector('#loginF .btn-auth');
+                if (loginBtn) {
+                    loginBtn.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🔍 DEBUG: Login button clicked (backup)');
+                        if (window.doLogin) {
+                            window.doLogin();
+                        } else {
+                            console.error('❌ doLogin function not available!');
+                            alert('Login function not loaded. Check console for errors.');
+                        }
+                    };
+                }
+                
+                // Register button
+                const registerBtn = document.querySelector('#regF .btn-auth');
+                if (registerBtn) {
+                    registerBtn.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🔍 DEBUG: Register button clicked (backup)');
+                        if (window.doRegister) {
+                            window.doRegister();
+                        } else {
+                            console.error('❌ doRegister function not available!');
+                            alert('Register function not loaded. Check console for errors.');
+                        }
+                    };
+                }
+                
+                // Forgot password link
+                const forgotLink = document.querySelector('a[onclick*="showForgotPassword"]');
+                if (forgotLink) {
+                    forgotLink.onclick = function(e) {
+                        e.preventDefault();
+                        console.log('🔍 DEBUG: Forgot password clicked');
+                        if (window.showForgotPassword) {
+                            window.showForgotPassword();
+                        } else {
+                            console.error('❌ showForgotPassword function not available!');
+                        }
+                    };
+                }
+                
+                console.log('🔍 DEBUG: Backup handlers added');
+            }, 1000);
+        });
+        
+        // Check for errors
+        window.onerror = function(msg, url, line) {
+            console.error('❌ JavaScript Error:', msg, 'at', line);
+        };
+    </script>
 </body>
 </html>
