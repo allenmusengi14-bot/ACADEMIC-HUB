@@ -1,0 +1,395 @@
+/* ===== MOBILE RESPONSIVENESS FIXES ===== */
+@media(max-width:768px){
+  /* Fix scaling issues */
+  html, body {
+    font-size: 14px;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+  
+  .main {
+    width: 100%;
+    overflow-x: hidden;
+    margin-left: 0 !important;
+  }
+  
+  .page {
+    padding: 12px 10px !important;
+    width: 100%;
+  }
+  
+  /* Hide sidebar by default on mobile */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.4);
+  }
+  
+  .sidebar.collapsed {
+    transform: translateX(-100%) !important;
+  }
+  
+  /* Show topbar on mobile */
+  .topbar {
+    display: flex;
+  }
+  
+  #sidebarOpenBtn {
+    display: none !important;
+  }
+  
+  /* Fix card sizing */
+  .card {
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    width: 100%;
+  }
+  
+  /* Fix grid layouts */
+  .hsc-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+  }
+  
+  .hsc-item {
+    min-width: 0 !important;
+    padding: 12px !important;
+  }
+  
+  /* Fix text sizes */
+  .page-header h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .page-header p {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Fix tables */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+  
+  th, td {
+    padding: 8px 10px !important;
+  }
+  
+  /* Fix form inputs */
+  .ff input, .ff select, .ff textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px !important;
+  }
+  
+  /* Fix timer displays */
+  .timer-display-large {
+    font-size: 2.5rem !important;
+  }
+  
+  .stopwatch-display {
+    font-size: 2.2rem !important;
+  }
+  
+  /* Fix modal for mobile */
+  .modal {
+    width: 95% !important;
+    margin: 10px !important;
+    padding: 20px !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-bg {
+    padding: 8px;
+  }
+  
+  /* Fix dashboard grid */
+  .dashboard {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  
+  /* Fix stat cards */
+  .stat-card {
+    padding: 15px !important;
+  }
+  
+  .stat-val {
+    font-size: 2rem !important;
+  }
+  
+  /* Fix buttons */
+  .btn {
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  /* Fix tabs */
+  .sessions-tabs {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .session-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 6px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .seg-tabs {
+    width: 100%;
+    gap: 2px;
+  }
+  
+  .seg-tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 6px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Fix room grids */
+  .rooms-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  
+  .room-card {
+    padding: 15px !important;
+  }
+  
+  /* Fix peerbridge */
+  .req-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  
+  .req-top > div:last-child {
+    width: 100% !important;
+    margin-top: 8px;
+  }
+  
+  .pb-banner {
+    flex-direction: column !important;
+    text-align: center;
+    padding: 20px !important;
+  }
+  
+  .pb-banner h2 {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Fix calendar */
+  .calendar-grid {
+    gap: 3px !important;
+  }
+  
+  .calendar-day {
+    font-size: 0.7rem !important;
+    padding: 5px !important;
+  }
+  
+  .calendar-weekday {
+    font-size: 0.6rem !important;
+  }
+  
+  /* Fix profile */
+  .profile-hero {
+    flex-direction: column !important;
+    text-align: center;
+    padding: 20px !important;
+  }
+  
+  .profile-hero::after {
+    font-size: 3rem !important;
+  }
+  
+  /* Fix auth */
+  .auth-card {
+    padding: 24px 20px !important;
+  }
+  
+  .auth-brand-text strong {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Fix row2 grids */
+  .row2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Fix timer section */
+  .timer-section {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .timer-controls {
+    flex-wrap: wrap;
+  }
+  
+  .timer-controls button {
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  /* Fix session search */
+  .session-search {
+    flex-direction: column;
+  }
+  
+  .session-search input,
+  .session-search select {
+    width: 100%;
+  }
+  
+  /* Fix faculty tabs */
+  .faculty-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+  
+  .faculty-tab {
+    flex-shrink: 0;
+  }
+  
+  /* Fix leaderboard */
+  #ptsLeaderboardList > div {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  /* Fix group stats */
+  .group-stats {
+    flex-wrap: wrap;
+  }
+  
+  /* Fix location presets */
+  .location-input-group {
+    flex-wrap: wrap;
+  }
+  
+  .location-preset {
+    flex: 1;
+    text-align: center;
+    font-size: 0.7rem !important;
+    padding: 6px 8px !important;
+  }
+}
+
+@media(max-width:480px){
+  html, body {
+    font-size: 13px;
+  }
+  
+  .hsc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .timer-controls {
+    flex-direction: column;
+  }
+  
+  .timer-controls button {
+    width: 100%;
+  }
+  
+  .modal-acts {
+    flex-direction: column;
+  }
+  
+  .modal-acts button {
+    width: 100%;
+  }
+  
+  .auth-tabs button {
+    font-size: 0.8rem !important;
+    padding: 8px 6px !important;
+  }
+  
+  .ff label {
+    font-size: 0.7rem !important;
+  }
+  
+  .streak-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .streak-badge {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .home-top-row h2 {
+    font-size: 1.2rem !important;
+  }
+  
+  .hero-quote {
+    font-size: 0.75rem !important;
+  }
+  
+  .stat-val {
+    font-size: 1.5rem !important;
+  }
+  
+  .timer-display-large,
+  .stopwatch-display {
+    font-size: 2rem !important;
+  }
+  
+  .calendar-day {
+    font-size: 0.65rem !important;
+  }
+  
+  .badge {
+    font-size: 0.65rem !important;
+    padding: 3px 8px !important;
+  }
+  
+  .btn-sm {
+    padding: 5px 10px !important;
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Fix for notch phones */
+@supports (padding: max(0px)) {
+  .main {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .sidebar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Landscape mode fixes */
+@media(max-width:896px) and (orientation: landscape) {
+  .modal {
+    max-height: 85vh;
+  }
+  
+  .sidebar-nav {
+    max-height: calc(100vh - 200px);
+  }
+  
+  .timer-section {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .rooms-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
