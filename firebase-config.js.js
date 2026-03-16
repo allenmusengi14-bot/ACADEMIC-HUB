@@ -8,12 +8,15 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, collection,
 // Your Firebase configuration
 // IMPORTANT: Replace this with your own Firebase config when you create a new project
 const firebaseConfig = {
-  apiKey: "AIzaSyBg8om9AP7dase-Zoc8OeojfP8kQI5qtho",
-  authDomain: "ub-academic-hub.firebaseapp.com",
-  projectId: "ub-academic-hub",
-  storageBucket: "ub-academic-hub.firebasestorage.app",
-  messagingSenderId: "972839460503",
-  appId: "1:972839460503:web:34b8d9d99da370239f13d2"
+  const firebaseConfig = {
+  apiKey: "AIzaSyB6g6a1jDb7wpUqpx1r7veH-hrejGvclp8",
+  authDomain: "academic-hub-9d04d.firebaseapp.com",
+  projectId: "academic-hub-9d04d",
+  storageBucket: "academic-hub-9d04d.firebasestorage.app",
+  messagingSenderId: "986870327435",
+  appId: "1:986870327435:web:cda3c3b81dc0da3b884c8e",
+  measurementId: "G-LT9SYLMXZE"
+};
 };
 
 const app = initializeApp(firebaseConfig);
