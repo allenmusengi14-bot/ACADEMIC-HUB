@@ -1,335 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>UB Academic Hub</title>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/mobile.css">
-    <link rel="stylesheet" href="css/themes.css">
-    
-    <!-- DIRECT AUTH SCRIPT - Complete with Firebase -->
-    <script type="module">
-        // Import Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+// Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection,
+         addDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, serverTimestamp,
+         where, increment, arrayUnion, arrayRemove }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB6g6a1jDb7wpUqpx1r7veH-hrejGvclp8",
-            authDomain: "academic-hub-9d04d.firebaseapp.com",
-            projectId: "academic-hub-9d04d",
-            storageBucket: "academic-hub-9d04d.firebasestorage.app",
-            messagingSenderId: "986870327435",
-            appId: "1:986870327435:web:cda3c3b81dc0da3b884c8e",
-            measurementId: "G-LT9SYLMXZE"
-        };
+// ORIGINAL WORKING FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: "AIzaSyBg8om9AP7dase-Zoc8OeojfP8kQI5qtho",
+  authDomain: "ub-academic-hub.firebaseapp.com",
+  projectId: "ub-academic-hub",
+  storageBucket: "ub-academic-hub.firebasestorage.app",
+  messagingSenderId: "972839460503",
+  appId: "1:972839460503:web:34b8d9d99da370239f13d2"
+};
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        console.log('🔥 Firebase initialized');
+const _app = initializeApp(firebaseConfig);
+const _db  = getFirestore(_app);
 
-        // Make Firebase available globally
-        window.db = db;
-        
-        // Helper functions
-        async function getUser(id) { 
-            const s = await getDoc(doc(db, 'users', id)); 
-            return s.exists() ? s.data() : null; 
-        }
-        
-        async function setUser(id, data) { 
-            await setDoc(doc(db, 'users', id), data, { merge: true }); 
-        }
+// Firestore helpers
+const FS = {
+  async getUser(id){ const s=await getDoc(doc(_db,'users',id)); return s.exists()?s.data():null; },
+  async setUser(id,data){ await setDoc(doc(_db,'users',id),data,{merge:true}); },
+  async addRequest(data){ return await addDoc(collection(_db,'requests'),{...data,at:serverTimestamp()}); },
+  async deleteRequest(id){ await deleteDoc(doc(_db,'requests',id)); },
+  async updateRequest(id,data){ await updateDoc(doc(_db,'requests',id),data); },
+  onRequests(cb){ return onSnapshot(query(collection(_db,'requests'),orderBy('at','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async getRatings(){ const s=await getDocs(collection(_db,'ratings')); const r={}; s.docs.forEach(d=>r[d.id]=d.data().list||[]); return r; },
+  async addRating(tutorId,rating){ const ref=doc(_db,'ratings',tutorId); const s=await getDoc(ref); const list=s.exists()?(s.data().list||[]):[];list.push(rating);await setDoc(ref,{list}); },
+  async addSession(data){ return await addDoc(collection(_db,'sessions'),{...data,at:serverTimestamp()}); },
+  async deleteSession(id){ await deleteDoc(doc(_db,'sessions',id)); },
+  async updateSession(id,data){ await updateDoc(doc(_db,'sessions',id),data); },
+  onSessions(cb){ return onSnapshot(query(collection(_db,'sessions'),orderBy('at','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async getAllUsers(){ const s=await getDocs(collection(_db,'users')); const r={}; s.docs.forEach(d=>r[d.id]=d.data()); return r; },
+  async addPoint(data){ return await addDoc(collection(_db,'points'),{...data,at:serverTimestamp()}); },
+  async getPoints(){ const s=await getDocs(query(collection(_db,'points'),orderBy('at','desc'))); return s.docs.map(d=>({id:d.id,...d.data()})); },
+  onPoints(cb){ return onSnapshot(query(collection(_db,'points'),orderBy('at','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async sendMsg(sessionId,data){ return await addDoc(collection(_db,'chats',sessionId,'messages'),{...data,at:serverTimestamp()}); },
+  onMsgs(sessionId,cb){ return onSnapshot(query(collection(_db,'chats',sessionId,'messages'),orderBy('at','asc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async addStudySession(data){ return await addDoc(collection(_db,'studySessions'),{...data,at:serverTimestamp()}); },
+  async getUserStudySessions(userId){ const s=await getDocs(query(collection(_db,'studySessions'),where('userId','==',userId),orderBy('date','desc'))); return s.docs.map(d=>({id:d.id,...d.data()})); },
+  async addNotification(userId,data){ await addDoc(collection(_db,'notifications'),{userId,...data,at:serverTimestamp(),read:false}); },
+  async getNotifications(userId){ const s=await getDocs(query(collection(_db,'notifications'),where('userId','==',userId),orderBy('at','desc'),limit(20))); return s.docs.map(d=>({id:d.id,...d.data()})); },
+  async addGroup(data){ return await addDoc(collection(_db,'groups'),{...data,at:serverTimestamp(),members:[data.createdBy]}); },
+  async getGroups(){ const s=await getDocs(query(collection(_db,'groups'),orderBy('at','desc'))); return s.docs.map(d=>({id:d.id,...d.data()})); },
+  onGroups(cb){ return onSnapshot(query(collection(_db,'groups'),orderBy('at','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async joinGroup(groupId,userId){ await updateDoc(doc(_db,'groups',groupId),{members:arrayUnion(userId)}); },
+  async leaveGroup(groupId,userId){ await updateDoc(doc(_db,'groups',groupId),{members:arrayRemove(userId)}); },
+  async deleteGroup(groupId){ await deleteDoc(doc(_db,'groups',groupId)); },
+  async sendGroupMsg(groupId,data){ return await addDoc(collection(_db,'groupChats',groupId,'messages'),{...data,at:serverTimestamp()}); },
+  onGroupMsgs(groupId,cb){ return onSnapshot(query(collection(_db,'groupChats',groupId,'messages'),orderBy('at','asc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async addStudySessionPost(data){ return await addDoc(collection(_db,'studySessionsPosts'),{...data,at:serverTimestamp()}); },
+  async deleteStudySessionPost(id){ await deleteDoc(doc(_db,'studySessionsPosts',id)); },
+  async updateStudySessionPost(id,data){ await updateDoc(doc(_db,'studySessionsPosts',id),data); },
+  onStudySessionsPosts(cb){ return onSnapshot(query(collection(_db,'studySessionsPosts'),orderBy('dateTime','asc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async addFocusRoom(data){ return await addDoc(collection(_db,'focusRooms'),{...data,at:serverTimestamp(),participants:[data.createdBy]}); },
+  async deleteFocusRoom(id){ await deleteDoc(doc(_db,'focusRooms',id)); },
+  async updateFocusRoom(id,data){ await updateDoc(doc(_db,'focusRooms',id),data); },
+  onFocusRooms(cb){ return onSnapshot(query(collection(_db,'focusRooms'),orderBy('created','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()})))); },
+  async joinFocusRoom(roomId,userId){ await updateDoc(doc(_db,'focusRooms',roomId),{participants:arrayUnion(userId)}); },
+  async leaveFocusRoom(roomId,userId){ await updateDoc(doc(_db,'focusRooms',roomId),{participants:arrayRemove(userId)}); },
+  async updateRoomTimer(roomId,timerData){ await updateDoc(doc(_db,'focusRooms',roomId),timerData); },
+};
 
-        // ============ AUTH FUNCTIONS ============
-        
-        // Register function
-        window.doRegister = async function() {
-            console.log('✅ Register clicked');
-            
-            // Get form values
-            const name = document.getElementById('rN')?.value.trim();
-            const studentId = document.getElementById('rU')?.value.trim();
-            const whatsapp = document.getElementById('rW')?.value.trim();
-            const email = document.getElementById('rE')?.value.trim();
-            const faculty = document.getElementById('rFac')?.value;
-            const year = document.getElementById('rY')?.value;
-            const password = document.getElementById('rP')?.value;
-            const confirmPass = document.getElementById('rPC')?.value;
-            
-            // Validate
-            if (!name || !studentId || !whatsapp || !password) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            
-            if (!/^\d{9}$/.test(studentId)) {
-                alert('Student ID must be exactly 9 digits');
-                return;
-            }
-            
-            if (password !== confirmPass) {
-                alert('Passwords do not match');
-                return;
-            }
-            
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters');
-                return;
-            }
-            
-            try {
-                // Check if user exists
-                const existing = await getUser(studentId);
-                if (existing) {
-                    alert('This Student ID is already registered');
-                    return;
-                }
-                
-                // Create user data
-                const userData = {
-                    name: name,
-                    password: password,
-                    wa: whatsapp,
-                    email: email || '',
-                    year: year,
-                    faculty: faculty,
-                    studentId: studentId,
-                    modules: [],
-                    isTutor: false,
-                    tutorBio: '',
-                    tutorSubjects: [],
-                    programme: '',
-                    semester: 'Semester 1',
-                    createdAt: new Date().toISOString(),
-                    settings: {
-                        darkMode: false,
-                        compact: false,
-                        emailNotif: true,
-                        pushNotif: true,
-                        showProfile: true
-                    },
-                    studyStats: {
-                        totalHours: 0,
-                        streak: 0,
-                        lastStudyDate: null,
-                        points: 0
-                    }
-                };
-                
-                // Save to Firebase
-                await setUser(studentId, userData);
-                
-                alert('✅ Registration successful! You can now login.');
-                
-                // Switch to login tab
-                window.authTab('login');
-                
-                // Clear registration form
-                document.getElementById('rN').value = '';
-                document.getElementById('rU').value = '';
-                document.getElementById('rW').value = '';
-                document.getElementById('rE').value = '';
-                document.getElementById('rP').value = '';
-                document.getElementById('rPC').value = '';
-                
-            } catch (error) {
-                console.error('Registration error:', error);
-                alert('Registration failed: ' + error.message);
-            }
-        };
-        
-        // Login function
-        window.doLogin = async function() {
-            console.log('✅ Login clicked');
-            
-            const studentId = document.getElementById('lU')?.value.trim();
-            const password = document.getElementById('lP')?.value;
-            const remember = document.getElementById('rememberMe')?.checked;
-            
-            if (!studentId || !password) {
-                alert('Please enter both Student ID and Password');
-                return;
-            }
-            
-            if (!/^\d{9}$/.test(studentId)) {
-                alert('Student ID must be exactly 9 digits');
-                return;
-            }
-            
-            try {
-                // Get user from Firebase
-                const user = await getUser(studentId);
-                
-                if (!user) {
-                    alert('Student ID not found. Please register first.');
-                    return;
-                }
-                
-                if (user.password !== password) {
-                    alert('Incorrect password');
-                    return;
-                }
-                
-                // Save to localStorage if remember me
-                if (remember) {
-                    localStorage.setItem('ub_rememberedUser', JSON.stringify({ id: studentId }));
-                }
-                
-                // Store current user globally
-                window.currentUser = user;
-                window.currentUserId = studentId;
-                
-                alert(`✅ Welcome back, ${user.name}!`);
-                
-                // Hide auth, show app
-                document.getElementById('authScreen').classList.add('hidden');
-                document.getElementById('appScreen').classList.remove('hidden');
-                
-                // Update UI with user info
-                const initial = user.name.charAt(0).toUpperCase();
-                document.getElementById('sbAv').textContent = initial;
-                document.getElementById('topAv').textContent = initial;
-                document.getElementById('profAv').textContent = initial;
-                document.getElementById('sbUname').textContent = user.name.split(' ')[0];
-                document.getElementById('pWA').value = user.wa || '';
-                
-                // Update profile page
-                document.getElementById('profName').textContent = user.name;
-                document.getElementById('pdName').textContent = user.name;
-                document.getElementById('pdUser').textContent = user.studentId;
-                document.getElementById('pdWA').textContent = user.wa;
-                document.getElementById('pdEmail').textContent = user.email || '—';
-                document.getElementById('pdYear').textContent = user.year;
-                document.getElementById('pdFaculty').textContent = user.faculty;
-                document.getElementById('pdProgramme').textContent = user.programme || '—';
-                document.getElementById('profProgramme').value = user.programme || '';
-                
-                // Show setup modal if no programme
-                if (!user.programme) {
-                    setTimeout(() => {
-                        document.getElementById('setupMod')?.classList.add('on');
-                    }, 500);
-                }
-                
-                // Navigate to home
-                if (window.go) window.go('home');
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed: ' + error.message);
-            }
-        };
-        
-        // Forgot password
-        window.showForgotPassword = function() {
-            document.getElementById('forgotMod')?.classList.add('on');
-        };
-        
-        // Auth tab switching
-        window.authTab = function(tab) {
-            console.log('Switching to:', tab);
-            if (tab === 'login') {
-                document.getElementById('loginF')?.classList.remove('hidden');
-                document.getElementById('regF')?.classList.add('hidden');
-                document.querySelectorAll('.auth-tab')[0]?.classList.add('on');
-                document.querySelectorAll('.auth-tab')[1]?.classList.remove('on');
-            } else {
-                document.getElementById('loginF')?.classList.add('hidden');
-                document.getElementById('regF')?.classList.remove('hidden');
-                document.querySelectorAll('.auth-tab')[0]?.classList.remove('on');
-                document.querySelectorAll('.auth-tab')[1]?.classList.add('on');
-            }
-        };
-        
-        // Logout
-        window.doLogout = function() {
-            window.currentUser = null;
-            window.currentUserId = null;
-            document.getElementById('appScreen').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('lU').value = '';
-            document.getElementById('lP').value = '';
-            alert('Logged out successfully');
-        };
-        
-        // Sidebar functions
-        window.openSidebar = function() {
-            document.getElementById('sidebar')?.classList.add('open');
-            document.getElementById('sbOverlay')?.classList.add('on');
-        };
-        
-        window.closeSidebar = function() {
-            document.getElementById('sidebar')?.classList.remove('open');
-            document.getElementById('sbOverlay')?.classList.remove('on');
-        };
-        
-        window.toggleSidebar = function() {
-            const sb = document.getElementById('sidebar');
-            if (sb) {
-                if (sb.classList.contains('open')) {
-                    sb.classList.remove('open');
-                    document.getElementById('sbOverlay')?.classList.remove('on');
-                } else {
-                    sb.classList.add('open');
-                    document.getElementById('sbOverlay')?.classList.add('on');
-                }
-            }
-        };
-        
-        // Navigation
-        window.go = function(page) {
-            console.log('Navigating to:', page);
-            
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-            
-            // Show selected page
-            const pageEl = document.getElementById('pg-' + page);
-            if (pageEl) {
-                pageEl.classList.add('on');
-            }
-            
-            // Update sidebar active state
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
-            const navItem = document.getElementById('ni-' + page);
-            if (navItem) navItem.classList.add('on');
-            
-            // Update topbar title
-            const titles = {
-                home: 'Home', gpa: 'GPA Tracker', study: 'Study Hub', streak: 'Study Streak',
-                peer: 'Get Help', tutors: 'Find a Tutor', become: 'Become a Tutor',
-                profile: 'My Profile', squad: 'Study Squad', rooms: 'Focus Rooms',
-                points: 'Earn Points', settings: 'Settings'
-            };
-            document.getElementById('topTitle').textContent = titles[page] || page;
-            
-            window.closeSidebar();
-        };
-        
-        console.log('✅ All auth functions ready');
-        
-        // Check for saved login
-        const saved = localStorage.getItem('ub_rememberedUser');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                if (data && data.id) {
-                    document.getElementById('lU').value = data.id;
-                    document.getElementById('rememberMe').checked = true;
-                }
-            } catch(e) {}
-        }
-    </script>
-</head>
-<body>
-    <!-- Your existing HTML content remains exactly the same -->
-    <!-- ... (keep everything from your current index.html from here) ... -->
+window.FS = FS;
+window._fsReady = true;
+document.dispatchEvent(new CustomEvent('fs-ready'));
+console.log('✅ Firebase initialized with ORIGINAL working config');
+</script>
