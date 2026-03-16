@@ -2,6 +2,7 @@ import { FS } from './firebase-config.js';
 import { showToast, showLoading, hideLoading } from './components/toast.js';
 
 console.log('🔥 REAL AUTH loaded with Firebase');
+console.log('📋 FS available:', !!FS);
 
 // Global state (will be set by app.js)
 let CU = null;
@@ -31,13 +32,16 @@ window.doLogin = async function() {
   console.log('✅ Login function called');
   
   if (!window.FS) { 
-    setMsg('Still connecting... please wait.'); 
+    console.error('❌ FS not available!');
+    setMsg('Firebase not connected. Please refresh.'); 
     return;
   }
   
   const u = document.getElementById('lU')?.value.trim();
   const p = document.getElementById('lP')?.value;
   const remember = document.getElementById('rememberMe')?.checked;
+  
+  console.log('Login attempt for ID:', u);
   
   if (!u || !p) { 
     setMsg('Fill in all fields.'); 
@@ -52,12 +56,23 @@ window.doLogin = async function() {
   showLoading('Signing in...');
   
   try {
+    console.log('Fetching user from Firebase...');
     const user = await FS.getUser(u);
-    if (!user || user.password !== p) {
+    console.log('User data:', user ? 'Found' : 'Not found');
+    
+    if (!user) {
       hideLoading();
-      setMsg('Incorrect Student ID or password.');
+      setMsg('Student ID not found.');
       return;
     }
+    
+    if (user.password !== p) {
+      hideLoading();
+      setMsg('Incorrect password.');
+      return;
+    }
+    
+    console.log('Login successful for:', user.name);
     
     if (remember) {
       saveToLocal('rememberedUser', { id: u });
@@ -81,7 +96,8 @@ window.doRegister = async function() {
   console.log('✅ Register function called');
   
   if (!window.FS) { 
-    setMsg('Still connecting... please wait.'); 
+    console.error('❌ FS not available!');
+    setMsg('Firebase not connected. Please refresh.'); 
     return; 
   }
   
@@ -93,6 +109,8 @@ window.doRegister = async function() {
   const y = document.getElementById('rY')?.value;
   const p = document.getElementById('rP')?.value;
   const pc = document.getElementById('rPC')?.value;
+  
+  console.log('Register attempt for:', n, u);
   
   if (!n || !u || !w || !p) { 
     setMsg('Fill in all required fields.'); 
@@ -115,7 +133,9 @@ window.doRegister = async function() {
   showLoading('Creating your account...');
   
   try {
+    console.log('Checking if user exists...');
     const existing = await FS.getUser(u);
+    
     if (existing) {
       hideLoading();
       setMsg('This Student ID is already registered.');
@@ -152,7 +172,10 @@ window.doRegister = async function() {
       }
     };
     
+    console.log('Saving user to Firebase...');
     await FS.setUser(u, userData);
+    console.log('User saved successfully');
+    
     hideLoading();
     setMsg('✓ Account created!', true);
     showToast('Registration Successful', 'Welcome to UB Academic Hub!', 'success');
@@ -286,6 +309,18 @@ async function enterApp(u, userData) {
   const pWA = document.getElementById('pWA');
   if (pWA) pWA.value = userData.wa || '';
   
+  // Update profile displays
+  document.getElementById('pdName').textContent = userData.name || '—';
+  document.getElementById('pdUser').textContent = userData.studentId || '—';
+  document.getElementById('pdWA').textContent = userData.wa || '—';
+  document.getElementById('pdEmail').textContent = userData.email || '—';
+  document.getElementById('pdYear').textContent = userData.year || '—';
+  document.getElementById('pdFaculty').textContent = userData.faculty || '—';
+  document.getElementById('pdProgramme').textContent = userData.programme || '—';
+  document.getElementById('profName').textContent = userData.name || '—';
+  document.getElementById('profMeta').textContent = `${userData.year || 'Student'} · ${userData.faculty || 'University of Botswana'}`;
+  document.getElementById('profProgramme').value = userData.programme || '';
+  
   // Show app, hide auth
   const appScreen = document.getElementById('appScreen');
   const authScreen = document.getElementById('authScreen');
@@ -314,7 +349,7 @@ function saveToLocal(key, data) {
 
 // Initialize auth tabs
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Auth.js loaded');
+  console.log('Auth.js DOM loaded');
   
   // Set up auth tab switching
   const loginTab = document.getElementById('authLoginTab');
