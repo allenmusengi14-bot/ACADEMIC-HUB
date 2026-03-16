@@ -1,26 +1,25 @@
-// Firebase configuration
+// Firebase configuration - USING YOUR ORIGINAL WORKING FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection,
          addDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, serverTimestamp,
          where, increment, arrayUnion, arrayRemove, limit }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Your Firebase configuration
-// IMPORTANT: Replace this with your own Firebase config when you create a new project
+// YOUR ORIGINAL WORKING FIREBASE CONFIGURATION
 const firebaseConfig = {
-  const firebaseConfig = {
-  apiKey: "AIzaSyB6g6a1jDb7wpUqpx1r7veH-hrejGvclp8",
-  authDomain: "academic-hub-9d04d.firebaseapp.com",
-  projectId: "academic-hub-9d04d",
-  storageBucket: "academic-hub-9d04d.firebasestorage.app",
-  messagingSenderId: "986870327435",
-  appId: "1:986870327435:web:cda3c3b81dc0da3b884c8e",
-  measurementId: "G-LT9SYLMXZE"
-};
+  apiKey: "AIzaSyBg8om9AP7dase-Zoc8OeojfP8kQI5qtho",
+  authDomain: "ub-academic-hub.firebaseapp.com",
+  projectId: "ub-academic-hub",
+  storageBucket: "ub-academic-hub.firebasestorage.app",
+  messagingSenderId: "972839460503",
+  appId: "1:972839460503:web:34b8d9d99da370239f13d2"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+console.log('✅ Firebase initialized with ORIGINAL working config:', firebaseConfig.projectId);
 
 // Export Firebase services and helpers
 export { db, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, 
@@ -220,3 +219,6 @@ export const FS = {
 
 // Global reference
 window.FS = FS;
+window.db = db;
+
+console.log('✅ FS helper object available:', !!window.FS);
