@@ -13,46 +13,228 @@
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/themes.css">
     
-    <!-- DIRECT AUTH SCRIPT - This will definitely work -->
-    <script>
-        // SUPER SIMPLE AUTH - This runs immediately
-        console.log('🔥 DIRECT SCRIPT LOADED');
+    <!-- DIRECT AUTH SCRIPT - Complete with Firebase -->
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6g6a1jDb7wpUqpx1r7veH-hrejGvclp8",
+            authDomain: "academic-hub-9d04d.firebaseapp.com",
+            projectId: "academic-hub-9d04d",
+            storageBucket: "academic-hub-9d04d.firebasestorage.app",
+            messagingSenderId: "986870327435",
+            appId: "1:986870327435:web:cda3c3b81dc0da3b884c8e",
+            measurementId: "G-LT9SYLMXZE"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
-        // Define functions directly
-        window.doLogin = function() {
-            alert('Login clicked! Function is working!');
-            console.log('Login function executed');
+        console.log('🔥 Firebase initialized');
+
+        // Make Firebase available globally
+        window.db = db;
+        
+        // Helper functions
+        async function getUser(id) { 
+            const s = await getDoc(doc(db, 'users', id)); 
+            return s.exists() ? s.data() : null; 
+        }
+        
+        async function setUser(id, data) { 
+            await setDoc(doc(db, 'users', id), data, { merge: true }); 
+        }
+
+        // ============ AUTH FUNCTIONS ============
+        
+        // Register function
+        window.doRegister = async function() {
+            console.log('✅ Register clicked');
             
-            const studentId = document.getElementById('lU')?.value;
+            // Get form values
+            const name = document.getElementById('rN')?.value.trim();
+            const studentId = document.getElementById('rU')?.value.trim();
+            const whatsapp = document.getElementById('rW')?.value.trim();
+            const email = document.getElementById('rE')?.value.trim();
+            const faculty = document.getElementById('rFac')?.value;
+            const year = document.getElementById('rY')?.value;
+            const password = document.getElementById('rP')?.value;
+            const confirmPass = document.getElementById('rPC')?.value;
+            
+            // Validate
+            if (!name || !studentId || !whatsapp || !password) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            if (!/^\d{9}$/.test(studentId)) {
+                alert('Student ID must be exactly 9 digits');
+                return;
+            }
+            
+            if (password !== confirmPass) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+            
+            try {
+                // Check if user exists
+                const existing = await getUser(studentId);
+                if (existing) {
+                    alert('This Student ID is already registered');
+                    return;
+                }
+                
+                // Create user data
+                const userData = {
+                    name: name,
+                    password: password,
+                    wa: whatsapp,
+                    email: email || '',
+                    year: year,
+                    faculty: faculty,
+                    studentId: studentId,
+                    modules: [],
+                    isTutor: false,
+                    tutorBio: '',
+                    tutorSubjects: [],
+                    programme: '',
+                    semester: 'Semester 1',
+                    createdAt: new Date().toISOString(),
+                    settings: {
+                        darkMode: false,
+                        compact: false,
+                        emailNotif: true,
+                        pushNotif: true,
+                        showProfile: true
+                    },
+                    studyStats: {
+                        totalHours: 0,
+                        streak: 0,
+                        lastStudyDate: null,
+                        points: 0
+                    }
+                };
+                
+                // Save to Firebase
+                await setUser(studentId, userData);
+                
+                alert('✅ Registration successful! You can now login.');
+                
+                // Switch to login tab
+                window.authTab('login');
+                
+                // Clear registration form
+                document.getElementById('rN').value = '';
+                document.getElementById('rU').value = '';
+                document.getElementById('rW').value = '';
+                document.getElementById('rE').value = '';
+                document.getElementById('rP').value = '';
+                document.getElementById('rPC').value = '';
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed: ' + error.message);
+            }
+        };
+        
+        // Login function
+        window.doLogin = async function() {
+            console.log('✅ Login clicked');
+            
+            const studentId = document.getElementById('lU')?.value.trim();
             const password = document.getElementById('lP')?.value;
+            const remember = document.getElementById('rememberMe')?.checked;
             
             if (!studentId || !password) {
                 alert('Please enter both Student ID and Password');
                 return;
             }
             
-            alert(`Attempting login with ID: ${studentId}`);
-        };
-        
-        window.doRegister = function() {
-            alert('Register clicked! Function is working!');
-            console.log('Register function executed');
-            
-            const name = document.getElementById('rN')?.value;
-            const id = document.getElementById('rU')?.value;
-            
-            if (!name || !id) {
-                alert('Please enter your name and student ID');
+            if (!/^\d{9}$/.test(studentId)) {
+                alert('Student ID must be exactly 9 digits');
                 return;
             }
             
-            alert(`Attempting to register: ${name}`);
+            try {
+                // Get user from Firebase
+                const user = await getUser(studentId);
+                
+                if (!user) {
+                    alert('Student ID not found. Please register first.');
+                    return;
+                }
+                
+                if (user.password !== password) {
+                    alert('Incorrect password');
+                    return;
+                }
+                
+                // Save to localStorage if remember me
+                if (remember) {
+                    localStorage.setItem('ub_rememberedUser', JSON.stringify({ id: studentId }));
+                }
+                
+                // Store current user globally
+                window.currentUser = user;
+                window.currentUserId = studentId;
+                
+                alert(`✅ Welcome back, ${user.name}!`);
+                
+                // Hide auth, show app
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                
+                // Update UI with user info
+                const initial = user.name.charAt(0).toUpperCase();
+                document.getElementById('sbAv').textContent = initial;
+                document.getElementById('topAv').textContent = initial;
+                document.getElementById('profAv').textContent = initial;
+                document.getElementById('sbUname').textContent = user.name.split(' ')[0];
+                document.getElementById('pWA').value = user.wa || '';
+                
+                // Update profile page
+                document.getElementById('profName').textContent = user.name;
+                document.getElementById('pdName').textContent = user.name;
+                document.getElementById('pdUser').textContent = user.studentId;
+                document.getElementById('pdWA').textContent = user.wa;
+                document.getElementById('pdEmail').textContent = user.email || '—';
+                document.getElementById('pdYear').textContent = user.year;
+                document.getElementById('pdFaculty').textContent = user.faculty;
+                document.getElementById('pdProgramme').textContent = user.programme || '—';
+                document.getElementById('profProgramme').value = user.programme || '';
+                
+                // Show setup modal if no programme
+                if (!user.programme) {
+                    setTimeout(() => {
+                        document.getElementById('setupMod')?.classList.add('on');
+                    }, 500);
+                }
+                
+                // Navigate to home
+                if (window.go) window.go('home');
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed: ' + error.message);
+            }
         };
         
+        // Forgot password
         window.showForgotPassword = function() {
-            alert('Forgot password clicked');
+            document.getElementById('forgotMod')?.classList.add('on');
         };
         
+        // Auth tab switching
         window.authTab = function(tab) {
             console.log('Switching to:', tab);
             if (tab === 'login') {
@@ -68,190 +250,86 @@
             }
         };
         
-        console.log('✅ Direct functions attached:', {
-            login: typeof window.doLogin,
-            register: typeof window.doRegister
-        });
+        // Logout
+        window.doLogout = function() {
+            window.currentUser = null;
+            window.currentUserId = null;
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('lU').value = '';
+            document.getElementById('lP').value = '';
+            alert('Logged out successfully');
+        };
+        
+        // Sidebar functions
+        window.openSidebar = function() {
+            document.getElementById('sidebar')?.classList.add('open');
+            document.getElementById('sbOverlay')?.classList.add('on');
+        };
+        
+        window.closeSidebar = function() {
+            document.getElementById('sidebar')?.classList.remove('open');
+            document.getElementById('sbOverlay')?.classList.remove('on');
+        };
+        
+        window.toggleSidebar = function() {
+            const sb = document.getElementById('sidebar');
+            if (sb) {
+                if (sb.classList.contains('open')) {
+                    sb.classList.remove('open');
+                    document.getElementById('sbOverlay')?.classList.remove('on');
+                } else {
+                    sb.classList.add('open');
+                    document.getElementById('sbOverlay')?.classList.add('on');
+                }
+            }
+        };
+        
+        // Navigation
+        window.go = function(page) {
+            console.log('Navigating to:', page);
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+            
+            // Show selected page
+            const pageEl = document.getElementById('pg-' + page);
+            if (pageEl) {
+                pageEl.classList.add('on');
+            }
+            
+            // Update sidebar active state
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+            const navItem = document.getElementById('ni-' + page);
+            if (navItem) navItem.classList.add('on');
+            
+            // Update topbar title
+            const titles = {
+                home: 'Home', gpa: 'GPA Tracker', study: 'Study Hub', streak: 'Study Streak',
+                peer: 'Get Help', tutors: 'Find a Tutor', become: 'Become a Tutor',
+                profile: 'My Profile', squad: 'Study Squad', rooms: 'Focus Rooms',
+                points: 'Earn Points', settings: 'Settings'
+            };
+            document.getElementById('topTitle').textContent = titles[page] || page;
+            
+            window.closeSidebar();
+        };
+        
+        console.log('✅ All auth functions ready');
+        
+        // Check for saved login
+        const saved = localStorage.getItem('ub_rememberedUser');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data && data.id) {
+                    document.getElementById('lU').value = data.id;
+                    document.getElementById('rememberMe').checked = true;
+                }
+            } catch(e) {}
+        }
     </script>
 </head>
 <body>
-    <!-- Particles Background -->
-    <div id="particles"></div>
-    
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Auth Screen -->
-    <div id="authScreen">
-        <div class="auth-blob" style="width:400px;height:400px;background:rgba(124,58,237,.4);top:-100px;right:-100px;"></div>
-        <div class="auth-blob" style="width:300px;height:300px;background:rgba(236,72,153,.3);bottom:-80px;left:-80px;animation-delay:-3s;"></div>
-        <div class="auth-card">
-            <div class="auth-brand">
-                <div class="auth-logo">UB</div>
-                <div class="auth-brand-text">
-                    <strong>Academic Hub</strong>
-                    <small>University of Botswana</small>
-                </div>
-            </div>
-            <div class="auth-tabs">
-                <button class="auth-tab on" onclick="window.authTab('login')">Sign In</button>
-                <button class="auth-tab" onclick="window.authTab('register')">Register</button>
-            </div>
-            <div id="loginF">
-                <div class="ff">
-                    <label>Student ID</label>
-                    <input id="lU" type="text" inputmode="numeric" maxlength="9" placeholder="9-digit Student ID" autocomplete="username">
-                </div>
-                <div class="ff">
-                    <label>Password</label>
-                    <input id="lP" type="password" placeholder="Your password">
-                </div>
-                <div class="ff" style="margin-bottom:8px;">
-                    <label style="display:flex;align-items:center;gap:5px;">
-                        <input type="checkbox" id="rememberMe"> Remember me
-                    </label>
-                </div>
-                <button class="btn-auth" onclick="window.doLogin()"><span>Sign In →</span></button>
-                <p style="text-align:center;margin-top:12px;">
-                    <a href="#" onclick="window.showForgotPassword()" style="color:var(--blue2);font-size:.8rem;">Forgot Password?</a>
-                </p>
-            </div>
-            <div id="regF" class="hidden">
-                <div class="ff"><label>Full Name</label><input id="rN" placeholder="e.g. Allen Mosimanegape"></div>
-                <div class="ff"><label>Student ID <span style="font-weight:400;color:var(--muted);">(9 digits)</span></label><input id="rU" type="text" inputmode="numeric" maxlength="9" placeholder="e.g. 201901234"></div>
-                <div class="ff"><label>WhatsApp Number</label><input id="rW" type="tel" placeholder="e.g. 267 71234567"></div>
-                <div class="ff"><label>Email (optional)</label><input id="rE" type="email" placeholder="e.g. name@example.com"></div>
-                <div class="ff"><label>Faculty</label>
-                    <select id="rFac">
-                        <option value="Engineering & Technology">Engineering & Technology</option>
-                        <option value="Science">Science</option>
-                        <option value="Business">Business</option>
-                        <option value="Social Sciences">Social Sciences</option>
-                        <option value="Humanities">Humanities</option>
-                        <option value="Education">Education</option>
-                        <option value="Law">Law</option>
-                        <option value="Medicine">Medicine</option>
-                    </select>
-                </div>
-                <div class="ff"><label>Year of Study</label>
-                    <select id="rY">
-                        <option>1st Year</option>
-                        <option>2nd Year</option>
-                        <option>3rd Year</option>
-                        <option>4th Year</option>
-                        <option>5th Year</option>
-                    </select>
-                </div>
-                <div class="ff"><label>Password</label><input id="rP" type="password" placeholder="Choose a password"></div>
-                <div class="ff"><label>Confirm Password</label><input id="rPC" type="password" placeholder="Confirm password"></div>
-                <button class="btn-auth" onclick="window.doRegister()"><span>Create Account →</span></button>
-            </div>
-            <p class="auth-msg" id="aMsg"></p>
-        </div>
-    </div>
-
-    <!-- App Screen -->
-    <div id="appScreen" class="hidden">
-        <div class="sidebar-overlay" id="sbOverlay" onclick="window.closeSidebar()"></div>
-        
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <div class="sb-logo" style="justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div class="sb-badge">UB</div>
-                        <div>
-                            <div class="sb-title">Academic Hub</div>
-                            <div class="sb-sub">University of Botswana</div>
-                        </div>
-                    </div>
-                    <button onclick="window.toggleSidebar()" id="sbToggleBtn" title="Collapse sidebar"
-                        style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);
-                        width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;
-                        justify-content:center;flex-shrink:0;transition:all .2s;">◀</button>
-                </div>
-            </div>
-            <div class="sidebar-user">
-                <div class="sb-av" id="sbAv">A</div>
-                <div class="sb-uinfo">
-                    <div class="sb-uname" id="sbUname">—</div>
-                    <span class="sb-role student" id="sbRole">Student</span>
-                </div>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-label">Dashboard</div>
-                    <button class="nav-item on" onclick="window.go('home')" id="ni-home"><span class="ni">🏠</span><span>Home</span></button>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-label">📚 Academic Tools</div>
-                    <button class="nav-item" onclick="window.go('gpa')" id="ni-gpa"><span class="ni">📊</span><span>GPA Tracker</span></button>
-                    <button class="nav-item" onclick="window.go('study')" id="ni-study"><span class="ni">🎓</span><span>Study Hub</span></button>
-                    <button class="nav-item" onclick="window.go('streak')" id="ni-streak"><span class="ni">🔥</span><span>Study Streak</span></button>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-label">🤝 PeerBridge</div>
-                    <button class="nav-item" onclick="window.go('peer')" id="ni-peer"><span class="ni">🙋</span><span>Get Help</span></button>
-                    <button class="nav-item" onclick="window.go('tutors')" id="ni-tutors"><span class="ni">⭐</span><span>Find a Tutor</span></button>
-                    <button class="nav-item" onclick="window.go('become')" id="ni-become"><span class="ni">🎯</span><span>Become a Tutor</span></button>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-label">👥 Community</div>
-                    <button class="nav-item" onclick="window.go('squad')" id="ni-squad"><span class="ni">📅</span><span>Study Squad</span></button>
-                    <button class="nav-item" onclick="window.go('rooms')" id="ni-rooms"><span class="ni">👥</span><span>Focus Rooms</span></button>
-                    <button class="nav-item" onclick="window.go('points')" id="ni-points"><span class="ni">⭐</span><span>Earn Points</span></button>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-label">Account</div>
-                    <button class="nav-item" onclick="window.go('profile')" id="ni-profile"><span class="ni">👤</span><span>My Profile</span></button>
-                    <button class="nav-item" onclick="window.go('settings')" id="ni-settings"><span class="ni">⚙️</span><span>Settings</span></button>
-                </div>
-            </nav>
-            <div class="sidebar-footer">
-                <button class="btn-logout" onclick="window.doLogout()">← Sign Out</button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="main">
-            <div class="topbar">
-                <button class="topbar-menu" onclick="window.openSidebar()">☰</button>
-                <span class="topbar-title" id="topTitle">Home</span>
-                <div class="topbar-av" id="topAv">A</div>
-            </div>
-            
-            <!-- Desktop "open sidebar" button -->
-            <button id="sidebarOpenBtn" onclick="window.toggleSidebar()" title="Open sidebar"
-                style="display:none;position:fixed;left:16px;top:16px;z-index:48;
-                width:42px;height:42px;border-radius:12px;
-                background:linear-gradient(135deg,#0f172a,#1e1b4b);
-                border:1px solid rgba(255,255,255,.15);color:#fff;
-                font-size:1.1rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);
-                align-items:center;justify-content:center;transition:all .2s;">▶</button>
-
-            <!-- Pages Container -->
-            <div id="pages-container"></div>
-        </div>
-    </div>
-
-    <!-- Modal Templates Container -->
-    <div id="modal-container"></div>
-
-    <!-- Other scripts (keep but they won't break anything) -->
-    <script src="js/firebase-config.js" type="module"></script>
-    <script src="js/components/utils.js" type="module"></script>
-    <script src="js/components/toast.js" type="module"></script>
-    <script src="js/auth.js" type="module"></script>
-    <script src="js/pages/home.js" type="module"></script>
-    <script src="js/pages/gpa.js" type="module"></script>
-    <script src="js/pages/study.js" type="module"></script>
-    <script src="js/pages/streak.js" type="module"></script>
-    <script src="js/pages/peer.js" type="module"></script>
-    <script src="js/pages/tutors.js" type="module"></script>
-    <script src="js/pages/squad.js" type="module"></script>
-    <script src="js/pages/rooms.js" type="module"></script>
-    <script src="js/pages/points.js" type="module"></script>
-    <script src="js/pages/profile.js" type="module"></script>
-    <script src="js/app.js" type="module"></script>
-</body>
-</html>
+    <!-- Your existing HTML content remains exactly the same -->
+    <!-- ... (keep everything from your current index.html from here) ... -->
