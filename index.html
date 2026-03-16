@@ -211,5 +211,53 @@
             }
         }, 2000);
     </script>
+
+    <!-- DEBUG SCRIPT - ADD THIS PART -->
+    <script>
+        console.log('🔍 DEBUG MODE ENABLED');
+        console.log('Open console (F12) to see detailed logs');
+        
+        // Manual test function
+        window.testFirebase = async function() {
+            console.log('🧪 Testing Firebase connection...');
+            try {
+                if (!window.FS) {
+                    console.error('❌ FS object not available!');
+                    return;
+                }
+                // Try to get a test user (this will just check connection)
+                const result = await window.FS.getUser('test123');
+                console.log('✅ Firebase connection successful!');
+                console.log('   (Test user lookup worked)');
+            } catch(e) {
+                console.error('❌ Firebase test failed:', e);
+            }
+        }
+        
+        // Test auth functions
+        window.testAuth = function() {
+            console.log('🧪 Testing auth functions:');
+            console.log('   doLogin:', typeof window.doLogin === 'function' ? '✅' : '❌');
+            console.log('   doRegister:', typeof window.doRegister === 'function' ? '✅' : '❌');
+            console.log('   showForgotPassword:', typeof window.showForgotPassword === 'function' ? '✅' : '❌');
+        }
+        
+        // Run tests after everything loads
+        window.addEventListener('load', function() {
+            console.log('📌 Page fully loaded');
+            setTimeout(() => {
+                window.testFirebase();
+                window.testAuth();
+            }, 1000);
+        });
+        
+        // Add click handlers to show what's happening
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-auth')) {
+                console.log('👆 Button clicked:', e.target.innerText);
+            }
+        });
+    </script>
+    <!-- END DEBUG SCRIPT -->
 </body>
 </html>
