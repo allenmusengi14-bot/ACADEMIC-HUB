@@ -1,5 +1,5 @@
-import { CU, CUK, mods } from '../app.js';
-import { showToast, saveToLocal, loadFromLocal, calculateGrade, calculateClass } from '../components/utils.js';
+import { CU, CUK, mods } from './app.js.js';
+import { showToast, saveToLocal, loadFromLocal, calculateGrade, calculateClass } from './utils.js.js';
 
 // Render GPA page
 export function renderGPAPage() {
