@@ -94,8 +94,42 @@ export function calculatePoints(mark) {
   return 0;
 }
 
+// Additional constants from MAIN PROJECT
+export const PTITLES = { home:'Home', gpa:'GPA Tracker', study:'Study Hub', streak:'Study Streak', peer:'Get Help',
+  tutors:'Find a Tutor', become:'Become a Tutor', profile:'My Profile', squad:'Study Squad',
+  rooms:'Focus Rooms', points:'Earn Points', settings:'Settings' };
+
+export const FOCUS_FACULTY_ICONS = {
+  'All':'✨',
+  'Engineering & Technology':'⚙️',
+  'Science':'🔬',
+  'Business':'💼',
+  'Social Sciences':'🌍',
+  'Humanities':'📚',
+  'Education':'🎓',
+  'Law':'⚖️',
+  'Medicine':'🩺'
+};
+
+export const STUDY_PET_TYPES = [
+  { id:'dog', name:'Buddy', blurb:'Loyal and bright. Loves long, steady study sessions.' },
+  { id:'cat', name:'Milo', blurb:'Calm and clever. Thrives on quiet revision blocks.' },
+  { id:'penguin', name:'Pip', blurb:'Focused and disciplined. Slides into deep work with you.' },
+  { id:'fox', name:'Nova', blurb:'Sharp and lively. Great for energetic study sprints.' },
+  { id:'bunny', name:'Luna', blurb:'Gentle and cozy. Perfect for soft, welcoming study days.' }
+];
+
+export const HOME_VIDEO_THEMES = ['yt-red', 'yt-blue', 'yt-gold', 'yt-teal'];
+
+export const FOCUS_ROOM_FACULTIES = ['Engineering & Technology', 'Science', 'Business', 'Social Sciences', 'Humanities', 'Education', 'Law', 'Medicine'];
+
 // Make available globally
 window.saveToLocal = saveToLocal;
 window.loadFromLocal = loadFromLocal;
 window.formatStopwatchTime = formatStopwatchTime;
 window.formatPomodoroTime = formatPomodoroTime;
+window.PTITLES = PTITLES;
+window.FOCUS_FACULTY_ICONS = FOCUS_FACULTY_ICONS;
+window.STUDY_PET_TYPES = STUDY_PET_TYPES;
+window.HOME_VIDEO_THEMES = HOME_VIDEO_THEMES;
+window.FOCUS_ROOM_FACULTIES = FOCUS_ROOM_FACULTIES;
