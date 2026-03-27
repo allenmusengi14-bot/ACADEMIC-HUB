@@ -94,10 +94,13 @@ export function calculatePoints(mark) {
   return 0;
 }
 
-// Additional constants from MAIN PROJECT
-export const PTITLES = { home:'Home', gpa:'GPA Tracker', study:'Study Hub', streak:'Study Streak', peer:'Get Help',
-  tutors:'Find a Tutor', become:'Become a Tutor', profile:'My Profile', squad:'Study Squad',
-  rooms:'Focus Rooms', points:'Earn Points', settings:'Settings' };
+// Additional constants
+export const PTITLES = { 
+  home:'Home', gpa:'GPA Tracker', study:'Study Hub', streak:'Study Streak', 
+  peer:'Get Help', tutors:'Find a Tutor', become:'Become a Tutor', 
+  profile:'My Profile', squad:'Study Squad', rooms:'Focus Rooms', 
+  points:'Earn Points', settings:'Settings' 
+};
 
 export const FOCUS_FACULTY_ICONS = {
   'All':'✨',
@@ -120,10 +123,9 @@ export const STUDY_PET_TYPES = [
 ];
 
 export const HOME_VIDEO_THEMES = ['yt-red', 'yt-blue', 'yt-gold', 'yt-teal'];
-
 export const FOCUS_ROOM_FACULTIES = ['Engineering & Technology', 'Science', 'Business', 'Social Sciences', 'Humanities', 'Education', 'Law', 'Medicine'];
 
-// Make available globally
+// Make globally available
 window.saveToLocal = saveToLocal;
 window.loadFromLocal = loadFromLocal;
 window.formatStopwatchTime = formatStopwatchTime;
