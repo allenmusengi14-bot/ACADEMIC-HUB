@@ -1,16 +1,21 @@
 import { FS } from './firebase-config.js';
 import { showToast, showLoading, hideLoading } from './components/toast.js';
+import { saveToLocal, loadFromLocal } from './components/utils.js';
+import { setCurrentUser, setCurrentUserKey, setModules } from './app.js';
 
-console.log('🔥 REAL AUTH loaded with Firebase');
-console.log('📋 FS available:', !!FS);
-
-// Global state (will be set by app.js)
+// Auth state
 let CU = null;
 let CUK = null;
 
+// Initialize auth listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Set up auth tab switching
+  document.getElementById('authLoginTab').addEventListener('click', () => authTab('login'));
+  document.getElementById('authRegisterTab').addEventListener('click', () => authTab('register'));
+});
+
 // Auth tab switching
-window.authTab = function(t) {
-  console.log('Switching to tab:', t);
+export function authTab(t) {
   document.querySelectorAll('.auth-tab').forEach((el, i) => {
     el.classList.toggle('on', (i === 0 && t === 'login') || (i === 1 && t === 'register'));
   });
@@ -21,27 +26,20 @@ window.authTab = function(t) {
 
 function setMsg(m, ok) {
   const el = document.getElementById('aMsg');
-  if (el) {
-    el.textContent = m || '';
-    el.style.color = ok ? 'var(--green)' : 'var(--red)';
-  }
+  el.textContent = m;
+  el.style.color = ok ? 'var(--green)' : 'var(--red)';
 }
 
 // Login function
-window.doLogin = async function() {
-  console.log('✅ Login function called');
-  
+export async function doLogin() {
   if (!window.FS) { 
-    console.error('❌ FS not available!');
-    setMsg('Firebase not connected. Please refresh.'); 
+    setMsg('Still connecting... please wait.'); 
     return;
   }
   
-  const u = document.getElementById('lU')?.value.trim();
-  const p = document.getElementById('lP')?.value;
-  const remember = document.getElementById('rememberMe')?.checked;
-  
-  console.log('Login attempt for ID:', u);
+  const u = document.getElementById('lU').value.trim();
+  const p = document.getElementById('lP').value;
+  const remember = document.getElementById('rememberMe').checked;
   
   if (!u || !p) { 
     setMsg('Fill in all fields.'); 
@@ -56,23 +54,12 @@ window.doLogin = async function() {
   showLoading('Signing in...');
   
   try {
-    console.log('Fetching user from Firebase...');
     const user = await FS.getUser(u);
-    console.log('User data:', user ? 'Found' : 'Not found');
-    
-    if (!user) {
+    if (!user || user.password !== p) {
       hideLoading();
-      setMsg('Student ID not found.');
+      setMsg('Incorrect Student ID or password.');
       return;
     }
-    
-    if (user.password !== p) {
-      hideLoading();
-      setMsg('Incorrect password.');
-      return;
-    }
-    
-    console.log('Login successful for:', user.name);
     
     if (remember) {
       saveToLocal('rememberedUser', { id: u });
@@ -85,32 +72,26 @@ window.doLogin = async function() {
     showToast('Welcome back!', `Good to see you, ${user.name.split(' ')[0]}!`, 'success');
   } catch (e) {
     hideLoading();
-    console.error('Login error:', e);
     setMsg('Connection error. Check your internet.');
     showToast('Login Failed', 'Please check your connection and try again.', 'error');
   }
 }
 
 // Register function
-window.doRegister = async function() {
-  console.log('✅ Register function called');
-  
+export async function doRegister() {
   if (!window.FS) { 
-    console.error('❌ FS not available!');
-    setMsg('Firebase not connected. Please refresh.'); 
+    setMsg('Still connecting... please wait.'); 
     return; 
   }
   
-  const n = document.getElementById('rN')?.value.trim();
-  const u = document.getElementById('rU')?.value.trim();
-  const w = document.getElementById('rW')?.value.trim();
-  const e = document.getElementById('rE')?.value.trim();
-  const fac = document.getElementById('rFac')?.value;
-  const y = document.getElementById('rY')?.value;
-  const p = document.getElementById('rP')?.value;
-  const pc = document.getElementById('rPC')?.value;
-  
-  console.log('Register attempt for:', n, u);
+  const n = document.getElementById('rN').value.trim();
+  const u = document.getElementById('rU').value.trim();
+  const w = document.getElementById('rW').value.trim();
+  const e = document.getElementById('rE').value.trim();
+  const fac = document.getElementById('rFac').value;
+  const y = document.getElementById('rY').value;
+  const p = document.getElementById('rP').value;
+  const pc = document.getElementById('rPC').value;
   
   if (!n || !u || !w || !p) { 
     setMsg('Fill in all required fields.'); 
@@ -133,9 +114,7 @@ window.doRegister = async function() {
   showLoading('Creating your account...');
   
   try {
-    console.log('Checking if user exists...');
     const existing = await FS.getUser(u);
-    
     if (existing) {
       hideLoading();
       setMsg('This Student ID is already registered.');
@@ -143,39 +122,14 @@ window.doRegister = async function() {
     }
     
     const userData = {
-      name: n, 
-      password: p, 
-      wa: w, 
-      email: e || '', 
-      year: y, 
-      faculty: fac,
-      studentId: u, 
-      modules: [], 
-      isTutor: false, 
-      tutorBio: '', 
-      tutorSubjects: [],
-      programme: '', 
-      semester: 'Semester 1', 
-      createdAt: new Date().toISOString(),
-      settings: { 
-        darkMode: false, 
-        compact: false, 
-        emailNotif: true, 
-        pushNotif: true, 
-        showProfile: true 
-      },
-      studyStats: { 
-        totalHours: 0, 
-        streak: 0, 
-        lastStudyDate: null, 
-        points: 0 
-      }
+      name: n, password: p, wa: w, email: e || '', year: y, faculty: fac,
+      studentId: u, modules: [], isTutor: false, tutorBio: '', tutorSubjects: [],
+      programme: '', semester: 'Semester 1', createdAt: new Date().toISOString(),
+      settings: { darkMode: false, compact: false, emailNotif: true, pushNotif: true, showProfile: true },
+      studyStats: { totalHours: 0, streak: 0, lastStudyDate: null, points: 0 }
     };
     
-    console.log('Saving user to Firebase...');
     await FS.setUser(u, userData);
-    console.log('User saved successfully');
-    
     hideLoading();
     setMsg('✓ Account created!', true);
     showToast('Registration Successful', 'Welcome to UB Academic Hub!', 'success');
@@ -183,25 +137,22 @@ window.doRegister = async function() {
     // Show setup modal after registration
     setTimeout(() => {
       enterApp(u, userData);
-      const setupMod = document.getElementById('setupMod');
-      if (setupMod) setupMod.classList.add('on');
+      document.getElementById('setupMod').classList.add('on');
     }, 700);
   } catch (e) {
     hideLoading();
-    console.error('Registration error:', e);
+    console.error(e);
     setMsg('Connection error. Check your internet.');
     showToast('Registration Failed', 'Please try again later.', 'error');
   }
 }
 
 // Logout function
-window.doLogout = async function() {
-  console.log('Logout function called');
-  
+export async function doLogout() {
   // Clear global state
-  if (window.setCurrentUser) window.setCurrentUser(null);
-  if (window.setCurrentUserKey) window.setCurrentUserKey(null);
-  if (window.setModules) window.setModules([]);
+  setCurrentUser(null);
+  setCurrentUserKey(null);
+  setModules([]);
   
   // Clear all intervals
   if (window._pomodoroInterval) clearInterval(window._pomodoroInterval);
@@ -214,39 +165,27 @@ window.doLogout = async function() {
   if (window._unsubStudyPosts) window._unsubStudyPosts();
   if (window._unsubFocusRooms) window._unsubFocusRooms();
   
-  const appScreen = document.getElementById('appScreen');
-  const authScreen = document.getElementById('authScreen');
-  
-  if (appScreen) appScreen.classList.add('hidden');
-  if (authScreen) authScreen.classList.remove('hidden');
-  
-  const lU = document.getElementById('lU');
-  const lP = document.getElementById('lP');
-  if (lU) lU.value = '';
-  if (lP) lP.value = '';
-  
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('lU').value = '';
+  document.getElementById('lP').value = '';
   showToast('Logged Out', 'You have been successfully logged out.', 'info');
 }
 
 // Forgot password
-window.showForgotPassword = function() {
-  const forgotMod = document.getElementById('forgotMod');
-  if (forgotMod) forgotMod.classList.add('on');
+export function showForgotPassword() {
+  document.getElementById('forgotMod').classList.add('on');
 }
 
-window.closeForgot = function() {
-  const forgotMod = document.getElementById('forgotMod');
-  if (forgotMod) forgotMod.classList.remove('on');
-  
-  const fU = document.getElementById('fU');
-  const fW = document.getElementById('fW');
-  if (fU) fU.value = '';
-  if (fW) fW.value = '';
+export function closeForgot() {
+  document.getElementById('forgotMod').classList.remove('on');
+  document.getElementById('fU').value = '';
+  document.getElementById('fW').value = '';
 }
 
-window.resetPassword = async function() {
-  const u = document.getElementById('fU')?.value.trim();
-  const w = document.getElementById('fW')?.value.trim();
+export async function resetPassword() {
+  const u = document.getElementById('fU').value.trim();
+  const w = document.getElementById('fW').value.trim();
   
   if (!u || !w) { 
     alert('Please fill in both fields.'); 
@@ -271,15 +210,12 @@ window.resetPassword = async function() {
     showToast('Password Reset', 'Temporary password sent. Check your WhatsApp.', 'info');
   } catch (e) {
     hideLoading();
-    console.error('Password reset error:', e);
     alert('An error occurred. Please try again.');
   }
 }
 
 // App entry point
 async function enterApp(u, userData) {
-  console.log('Entering app for user:', u);
-  
   if (!window.FS) {
     await new Promise(resolve => {
       if (window._fsReady) { 
@@ -287,14 +223,13 @@ async function enterApp(u, userData) {
         return; 
       }
       document.addEventListener('fs-ready', resolve, { once: true });
-      setTimeout(resolve, 5000);
+      setTimeout(resolve, 8000);
     });
   }
   
-  // Set global state
-  if (window.setCurrentUser) window.setCurrentUser(userData);
-  if (window.setCurrentUserKey) window.setCurrentUserKey(u);
-  if (window.setModules) window.setModules(userData.modules || []);
+  setCurrentUserKey(u);
+  setCurrentUser(userData);
+  setModules(userData.modules || []);
   
   // Update UI
   const ini = userData.name[0].toUpperCase();
@@ -303,80 +238,29 @@ async function enterApp(u, userData) {
     if (el) el.textContent = ini; 
   });
   
-  const sbUname = document.getElementById('sbUname');
-  if (sbUname) sbUname.textContent = userData.name.split(' ')[0];
-  
-  const pWA = document.getElementById('pWA');
-  if (pWA) pWA.value = userData.wa || '';
-  
-  // Update profile displays
-  document.getElementById('pdName').textContent = userData.name || '—';
-  document.getElementById('pdUser').textContent = userData.studentId || '—';
-  document.getElementById('pdWA').textContent = userData.wa || '—';
-  document.getElementById('pdEmail').textContent = userData.email || '—';
-  document.getElementById('pdYear').textContent = userData.year || '—';
-  document.getElementById('pdFaculty').textContent = userData.faculty || '—';
-  document.getElementById('pdProgramme').textContent = userData.programme || '—';
-  document.getElementById('profName').textContent = userData.name || '—';
-  document.getElementById('profMeta').textContent = `${userData.year || 'Student'} · ${userData.faculty || 'University of Botswana'}`;
-  document.getElementById('profProgramme').value = userData.programme || '';
+  document.getElementById('sbUname').textContent = userData.name.split(' ')[0];
+  document.getElementById('pWA').value = userData.wa || '';
   
   // Show app, hide auth
-  const appScreen = document.getElementById('appScreen');
-  const authScreen = document.getElementById('authScreen');
-  
-  if (appScreen) appScreen.classList.remove('hidden');
-  if (authScreen) authScreen.classList.add('hidden');
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
   
   // Navigate to home
-  if (window.go) window.go('home');
+  window.go('home');
   
   // Show setup modal if no programme set
   if (!userData.programme || userData.programme === '') {
     setTimeout(() => {
-      const setupMod = document.getElementById('setupMod');
-      if (setupMod) setupMod.classList.add('on');
+      document.getElementById('setupMod').classList.add('on');
     }, 800);
   }
 }
 
-// Local Storage helper
-function saveToLocal(key, data) { 
-  try { 
-    localStorage.setItem(`ub_${key}`, JSON.stringify(data)); 
-  } catch(e){} 
-}
-
-// Initialize auth tabs
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Auth.js DOM loaded');
-  
-  // Set up auth tab switching
-  const loginTab = document.getElementById('authLoginTab');
-  const registerTab = document.getElementById('authRegisterTab');
-  
-  if (loginTab) {
-    loginTab.addEventListener('click', () => window.authTab('login'));
-  }
-  
-  if (registerTab) {
-    registerTab.addEventListener('click', () => window.authTab('register'));
-  }
-  
-  // Add enter key handlers
-  const lP = document.getElementById('lP');
-  if (lP) {
-    lP.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') window.doLogin();
-    });
-  }
-  
-  const rP = document.getElementById('rP');
-  if (rP) {
-    rP.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') window.doRegister();
-    });
-  }
-});
-
-console.log('✅ REAL Auth functions ready');
+// Make functions globally available
+window.authTab = authTab;
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+window.doLogout = doLogout;
+window.showForgotPassword = showForgotPassword;
+window.closeForgot = closeForgot;
+window.resetPassword = resetPassword;
