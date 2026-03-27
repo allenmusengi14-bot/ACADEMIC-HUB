@@ -1,11 +1,11 @@
-// Firebase configuration - USING YOUR ORIGINAL WORKING FIREBASE
+// Firebase configuration
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection,
          addDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, serverTimestamp,
          where, increment, arrayUnion, arrayRemove, limit }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// YOUR ORIGINAL WORKING FIREBASE CONFIGURATION
+// Your Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBg8om9AP7dase-Zoc8OeojfP8kQI5qtho",
   authDomain: "ub-academic-hub.firebaseapp.com",
@@ -15,11 +15,8 @@ const firebaseConfig = {
   appId: "1:972839460503:web:34b8d9d99da370239f13d2"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-console.log('✅ Firebase initialized with ORIGINAL working config:', firebaseConfig.projectId);
 
 // Export Firebase services and helpers
 export { db, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, 
@@ -186,6 +183,14 @@ export const FS = {
       s => cb(s.docs.map(d => ({ id: d.id, ...d.data() })))); 
   },
   
+  async joinStudySession(sessionId, userId) { 
+    await updateDoc(doc(db, 'studySessionsPosts', sessionId), { participants: arrayUnion(userId) }); 
+  },
+  
+  async leaveStudySession(sessionId, userId) { 
+    await updateDoc(doc(db, 'studySessionsPosts', sessionId), { participants: arrayRemove(userId) }); 
+  },
+  
   // Focus rooms
   async addFocusRoom(data) { 
     return await addDoc(collection(db, 'focusRooms'), { ...data, at: serverTimestamp(), participants: [data.createdBy] }); 
@@ -200,7 +205,7 @@ export const FS = {
   },
   
   onFocusRooms(cb) { 
-    return onSnapshot(query(collection(db, 'focusRooms'), orderBy('created', 'desc')), 
+    return onSnapshot(query(collection(db, 'focusRooms'), orderBy('createdAt', 'desc')), 
       s => cb(s.docs.map(d => ({ id: d.id, ...d.data() })))); 
   },
   
@@ -217,8 +222,7 @@ export const FS = {
   },
 };
 
-// Global reference
+// Make globally available
 window.FS = FS;
-window.db = db;
-
-console.log('✅ FS helper object available:', !!window.FS);
+window._fsReady = true;
+document.dispatchEvent(new CustomEvent('fs-ready'));
