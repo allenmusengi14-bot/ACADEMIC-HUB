@@ -43,7 +43,7 @@
                 </div>
                 <div class="ff">
                     <label>Password</label>
-                    <input id="lP" type="password" placeholder="Your password">
+                    <input id="lP" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter') window.doLogin()">
                 </div>
                 <div class="ff" style="margin-bottom:8px;">
                     <label style="display:flex;align-items:center;gap:5px;">
@@ -81,7 +81,7 @@
                         <option>5th Year</option>
                     </select>
                 </div>
-                <div class="ff"><label>Password</label><input id="rP" type="password" placeholder="Choose a password"></div>
+                <div class="ff"><label>Password</label><input id="rP" type="password" placeholder="Choose a password" onkeydown="if(event.key==='Enter') window.doRegister()"></div>
                 <div class="ff"><label>Confirm Password</label><input id="rPC" type="password" placeholder="Confirm password"></div>
                 <button class="btn-auth" onclick="window.doRegister()"><span>Create Account →</span></button>
             </div>
@@ -169,14 +169,517 @@
                 align-items:center;justify-content:center;transition:all .2s;">▶</button>
 
             <!-- Pages Container -->
-            <div id="pages-container"></div>
+            <div id="pages-container">
+                <!-- Pages will be populated by JavaScript -->
+            </div>
         </div>
     </div>
 
     <!-- Modal Templates Container -->
-    <div id="modal-container"></div>
+    <div id="modal-container">
+<!-- Module Modal -->
+<div class="modal-bg" id="mMod">
+  <div class="modal">
+    <h3>📚 Add a Module</h3>
+    <div class="ff"><label>Module Code</label><input id="mC" placeholder="e.g. MEC 301"></div>
+    <div class="ff"><label>Module Name</label><input id="mN" placeholder="e.g. Thermodynamics II"></div>
+    <div class="modal-acts">
+      <button class="btn btn-green" onclick="saveMod()">✓ Add Module</button>
+      <button class="btn-sec" onclick="closeMod()">Cancel</button>
+    </div>
+  </div>
+</div>
 
-    <!-- Scripts - Load in correct order -->
+<!-- WhatsApp Modal -->
+<div class="modal-bg" id="waMod">
+  <div class="modal" style="text-align:center;">
+    <h3>🤝 Offer Help</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:14px;">You're about to message this student on WhatsApp.</p>
+    <div id="waInfo" style="background:linear-gradient(135deg,var(--green2),var(--teal2));border:1px solid var(--green3);border-radius:14px;padding:18px;margin-bottom:13px;"></div>
+    <p style="font-size:.78rem;color:var(--muted);">Standard rate: <strong style="color:var(--green)">P20 / hour</strong></p>
+    <div class="modal-acts" style="justify-content:center;margin-top:16px;">
+      <a id="waLink" href="#" target="_blank" class="wa-btn" onclick="closeWA()">💬 Open WhatsApp</a>
+      <button class="btn-sec" onclick="closeWA()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Squad Chat Modal -->
+<div class="modal-bg" id="squadChatMod" style="align-items:stretch;padding:0;">
+  <div style="background:#fff;width:100%;max-width:540px;margin:auto;border-radius:24px;display:flex;flex-direction:column;max-height:92vh;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#0f172a,#1e1b4b);padding:18px 22px;border-radius:24px 24px 0 0;display:flex;align-items:center;gap:12px;">
+      <div style="flex:1;">
+        <div style="font-family:'Fraunces',serif;font-size:1.05rem;color:#fff;" id="chatSessionTitle">Discussion</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.6);" id="chatSessionMeta"></div>
+      </div>
+      <button onclick="closeSquadChat()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px;background:#f8faff;"></div>
+    <div style="padding:14px 16px;border-top:1px solid var(--border);background:#fff;display:flex;gap:9px;">
+      <input id="chatInput" class="req-fi" placeholder="Type a message…" style="flex:1;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg();}">
+      <button class="btn btn-blue btn-sm" onclick="sendChatMsg()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rating Modal -->
+<div class="modal-bg" id="rateMod">
+  <div class="modal">
+    <h3>⭐ Rate Your Tutor</h3>
+    <p style="color:var(--muted);font-size:.84rem;" id="rateWho"></p>
+    <div class="rate-stars">
+      <span class="rate-star" onclick="setStar(1)">★</span><span class="rate-star" onclick="setStar(2)">★</span>
+      <span class="rate-star" onclick="setStar(3)">★</span><span class="rate-star" onclick="setStar(4)">★</span>
+      <span class="rate-star" onclick="setStar(5)">★</span>
+    </div>
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;">Tags</label>
+    <div class="rate-tag-grid">
+      <span class="rate-tag" onclick="toggleTag(this)">Patient</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Clear explanations</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Knowledgeable</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Punctual</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Friendly</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Well prepared</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Good examples</span>
+      <span class="rate-tag" onclick="toggleTag(this)">Encouraging</span>
+    </div>
+    <div class="ff" style="margin-top:13px;">
+      <label>Short note (optional)</label>
+      <textarea id="rateNote" placeholder="e.g. Really helped me understand the Carnot cycle!" style="min-height:56px;"></textarea>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-gold" onclick="submitRating()">⭐ Submit Rating</button>
+      <button class="btn-sec" onclick="closeRate()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Become Tutor Modal -->
+<div class="modal-bg" id="btMod">
+  <div class="modal">
+    <h3>🎯 Become a Peer Tutor</h3>
+    <p style="color:var(--muted);font-size:.83rem;margin-bottom:18px;">Fill in your profile to start earning P20/hr helping fellow students.</p>
+    <div class="ff"><label>Short Bio</label>
+      <textarea id="btBio" placeholder="e.g. 3rd year Mech Eng. Strong in Thermodynamics, Fluid Mechanics and Engineering Maths." style="min-height:80px;"></textarea></div>
+    <div class="ff"><label>Subjects You Can Teach</label>
+      <input id="btSubj" placeholder="e.g. Thermodynamics, Calculus, Statics (comma separated)"></div>
+    <div class="modal-acts">
+      <button class="btn btn-green" onclick="becomeTutor()">✓ Register as Tutor</button>
+      <button class="btn-sec" onclick="document.getElementById('btMod').classList.remove('on')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal-bg" id="forgotMod">
+  <div class="modal">
+    <h3>🔐 Reset Password</h3>
+    <p style="color:var(--muted);font-size:.84rem;margin-bottom:16px;">Enter your Student ID and WhatsApp number to reset your password.</p>
+    <div class="ff"><label>Student ID</label><input id="fU" type="text" placeholder="9-digit Student ID"></div>
+    <div class="ff"><label>WhatsApp Number</label><input id="fW" type="tel" placeholder="e.g. 267 71234567"></div>
+    <div class="modal-acts">
+      <button class="btn btn-blue" onclick="resetPassword()">Send Reset Link</button>
+      <button class="btn-sec" onclick="closeForgot()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Profile Modal -->
+<div class="modal-bg" id="setupMod">
+  <div class="modal" style="max-width:520px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:2.8rem;margin-bottom:8px;">🎓</div>
+      <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:6px;">Welcome to UB Academic Hub!</h3>
+      <p style="color:var(--muted);font-size:.84rem;">Tell us your programme and this semester's modules — this powers everything in the app.</p>
+    </div>
+    <div class="ff"><label>Programme / Degree</label>
+      <input id="setupProg" class="req-fi" placeholder="e.g. BSc Mechanical Engineering" value=""></div>
+    <div class="ff"><label>Current Semester</label>
+      <select id="setupSem" class="req-fi"><option>Semester 1</option><option>Semester 2</option></select></div>
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:9px;">This Semester's Modules</label>
+    <div id="setupModList" style="display:grid;gap:7px;margin-bottom:10px;min-height:20px;"></div>
+    <div style="display:grid;grid-template-columns:120px 1fr auto;gap:8px;align-items:end;margin-bottom:18px;">
+      <div>
+        <label style="font-size:.72rem;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Code</label>
+        <input id="setupCode" class="req-fi" placeholder="MEC 301" style="font-size:.85rem;padding:9px 12px;">
+      </div>
+      <div>
+        <label style="font-size:.72rem;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Module Name</label>
+        <input id="setupName" class="req-fi" placeholder="e.g. Thermodynamics II" style="font-size:.85rem;padding:9px 12px;" onkeydown="if(event.key==='Enter')addSetupMod()">
+      </div>
+      <button class="btn btn-green btn-sm" onclick="addSetupMod()" style="height:40px;white-space:nowrap;">+ Add</button>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-blue" onclick="saveSetup()">✓ Save & Continue</button>
+      <button class="btn-sec" onclick="closeSetup()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Session Detail Modal -->
+<div class="modal-bg" id="sessionMod">
+  <div class="modal" style="max-width:460px;">
+    <h3 id="sesModTitle" style="font-family:'Fraunces',serif;margin-bottom:5px;"></h3>
+    <div id="sesModBody" style="font-size:.88rem;color:var(--muted);line-height:1.7;"></div>
+    <div class="modal-acts" style="margin-top:18px;">
+      <a id="sesModWA" href="#" target="_blank" class="btn btn-green">💬 Join via WhatsApp</a>
+      <button class="btn-sec" onclick="document.getElementById('sessionMod').classList.remove('on')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications Modal -->
+<div class="modal-bg" id="notifMod">
+  <div class="modal" style="max-width:500px;">
+    <h3>🔔 Notifications</h3>
+    <div id="notifList" style="max-height:400px;overflow-y:auto;">
+      <div class="empty"><div class="ei">🔔</div><p>No new notifications</p></div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn-sec" onclick="closeNotif()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Permanent Group Modal -->
+<div class="modal-bg" id="createGroupMod">
+  <div class="modal">
+    <h3>👥 Create Permanent Study Group</h3>
+    <div class="ff"><label>Group Name</label><input id="groupName" class="req-fi" placeholder="e.g. Thermodynamics Masters"></div>
+    <div class="ff"><label>Module</label>
+      <select id="groupModule" class="req-fi">
+        <option value="">— Select module —</option>
+      </select>
+    </div>
+    <div class="ff"><label>Description</label>
+      <textarea id="groupDesc" class="req-fi" placeholder="What will your group focus on?" style="min-height:80px;"></textarea>
+    </div>
+    <div class="ff"><label>Faculty</label>
+      <select id="groupFaculty" class="req-fi">
+        <option value="Engineering & Technology">Engineering & Technology</option>
+        <option value="Science">Science</option>
+        <option value="Business">Business</option>
+        <option value="Social Sciences">Social Sciences</option>
+        <option value="Humanities">Humanities</option>
+        <option value="Education">Education</option>
+        <option value="Law">Law</option>
+        <option value="Medicine">Medicine</option>
+      </select>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-blue" onclick="createPermanentGroup()">✓ Create Group</button>
+      <button class="btn-sec" onclick="document.getElementById('createGroupMod').classList.remove('on')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Study Session Modal -->
+<div class="modal-bg" id="createSessionMod">
+  <div class="modal create-session-modal">
+    <h3>📅 Create Study Session</h3>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:18px;">Schedule a one-time or recurring study session with classmates</p>
+    
+    <div class="ff hidden">
+      <label>Session Type</label>
+      <div style="display:flex;gap:10px;margin-top:5px;">
+        <label style="display:flex;align-items:center;gap:5px;">
+          <input type="radio" name="sessionType" value="temporary" checked> ⏱️ One-time
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;">
+          <input type="radio" name="sessionType" value="permanent"> 👥 Create Permanent Group
+        </label>
+      </div>
+    </div>
+    
+    <div class="ff hidden">
+      <label>Module</label>
+      <select id="sessionModSelect" class="req-fi">
+        <option value="">— Select module —</option>
+      </select>
+    </div>
+    
+    <div class="ff">
+      <label>Topic / Discussion</label>
+      <input id="sessionTopic" class="req-fi" placeholder="e.g. Revision for Test 2, Chapter 5 problems..." />
+    </div>
+    
+    <div class="ff">
+      <label>📆 Date & Time</label>
+      <input id="sessionDateTime" type="datetime-local" class="req-fi" />
+    </div>
+    
+    <div class="ff">
+      <label>⏱️ Duration</label>
+      <select id="sessionDuration" class="req-fi">
+        <option value="30">30 minutes</option>
+        <option value="60" selected>1 hour</option>
+        <option value="90">1 hour 30 minutes</option>
+        <option value="120">2 hours</option>
+      </select>
+    </div>
+    
+    <div class="ff">
+      <label>📍 Location / Meeting Type</label>
+      <div class="location-input-group">
+        <span class="location-preset" onclick="setLocation('Library')">📚 Library</span>
+        <span class="location-preset" onclick="setLocation('Online (Zoom)')">💻 Online</span>
+        <span class="location-preset" onclick="setLocation('WhatsApp Call')">📞 WhatsApp</span>
+        <span class="location-preset" onclick="setLocation('Engineering Building')">🏛️ Engineering</span>
+      </div>
+      <input id="sessionLocation" class="req-fi" placeholder="Or type custom location" style="margin-top:8px;" />
+    </div>
+    
+    <div class="ff">
+      <label>👥 Max Participants</label>
+      <select id="sessionMaxParticipants" class="req-fi">
+        <option value="2">2 people</option>
+        <option value="3">3 people</option>
+        <option value="4">4 people</option>
+        <option value="5">5 people</option>
+        <option value="6">6 people</option>
+        <option value="8">8 people</option>
+        <option value="10">10 people</option>
+        <option value="15">15 people</option>
+        <option value="20">20 people</option>
+      </select>
+    </div>
+    
+    <div class="ff">
+      <label>📝 Additional Notes (optional)</label>
+      <textarea id="sessionNotes" class="req-fi" placeholder="e.g. Bring your calculator, we'll focus on past papers..." style="min-height:60px;"></textarea>
+    </div>
+    
+    <div class="modal-acts">
+      <button class="btn btn-blue" onclick="createStudySession()">✓ Create Session</button>
+      <button class="btn-sec" onclick="document.getElementById('createSessionMod').classList.remove('on')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Focus Room Modal -->
+<div class="modal-bg" id="createRoomMod">
+  <div class="modal create-session-modal" style="max-width:500px;">
+    <h3>🚀 Create Focus Room</h3>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:18px;">Set up your study space — your faculty peers will find it automatically</p>
+
+    <div class="ff">
+      <label>Room Name</label>
+      <input id="roomName" class="req-fi" placeholder="e.g. Thermo Grind Session" />
+    </div>
+
+    <div class="ff">
+      <label>Subject / Module</label>
+      <select id="roomModule" class="req-fi">
+        <option value="">— Select —</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="ff">
+        <label>Duration (days)</label>
+        <input id="roomDurationDays" class="req-fi" type="number" min="1" max="30" value="7" />
+      </div>
+      <div class="ff">
+        <label>Max Participants</label>
+        <select id="roomMaxParticipants" class="req-fi">
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+          <option value="5" selected>5</option><option value="6">6</option><option value="8">8</option><option value="10">10</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="ff">
+      <label>Daily Minimum Study Time</label>
+      <div style="display:flex;gap:10px;">
+        <select id="ruleDailyHrs" class="req-fi" onchange="updateRoomPointsPreview()">
+          <option value="0">0 hrs</option>
+          <option value="1">1 hr</option>
+          <option value="2">2 hrs</option>
+          <option value="3" selected>3 hrs</option>
+          <option value="4">4 hrs</option>
+          <option value="5">5 hrs</option>
+          <option value="6">6 hrs</option>
+          <option value="7">7 hrs</option>
+        </select>
+        <select id="ruleDailyMins" class="req-fi" onchange="updateRoomPointsPreview()">
+          <option value="0" selected>0 min</option>
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+        </select>
+      </div>
+      <div id="roomPointsPreview" style="margin-top:8px;background:var(--blue3);border-radius:10px;padding:10px 13px;font-size:.78rem;color:var(--blue);">
+        🎯 Points: <strong>5 pts</strong> for 3 hrs · <strong>10 pts</strong> for 5 hrs · <strong>15 pts</strong> for 7 hrs/day
+      </div>
+    </div>
+
+    <div class="ff">
+      <label>Description (optional)</label>
+      <textarea id="roomDescription" class="req-fi" placeholder="What's the vibe? Goals? Rules?" style="min-height:50px;"></textarea>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--blue3);border-radius:12px;padding:13px 16px;margin-bottom:16px;">
+      <div>
+        <div style="font-weight:700;font-size:.88rem;">🔒 Approve members before they join</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:2px;">You'll get a notification to accept or reject join requests</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="roomApproval"><span class="slider"></span></label>
+    </div>
+
+    <input type="hidden" id="roomFaculty" value="" />
+    <input type="hidden" id="ruleDailyMin" value="180" />
+    <input type="hidden" id="roomDailyPoints" value="5" />
+
+    <div class="modal-acts">
+      <button class="btn btn-purple" onclick="createFocusRoom()">🚀 Create Room</button>
+      <button class="btn-sec" onclick="document.getElementById('createRoomMod').classList.remove('on')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOCUS ROOM SESSION VIEW -->
+<div id="focusRoomSession" class="hidden" style="position:fixed;inset:0;z-index:500;overflow:hidden;display:flex;flex-direction:column;">
+  <canvas id="spaceCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;"></canvas>
+
+  <div style="position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(0,0,0,.25);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.1);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button onclick="leaveRoomSession()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 14px;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:600;backdrop-filter:blur(8px);">← Leave</button>
+      <div>
+        <div id="sessionRoomName" style="color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.4);"></div>
+        <div id="sessionRoomMeta" style="color:rgba(255,255,255,.6);font-size:.7rem;"></div>
+      </div>
+    </div>
+    <div style="display:flex;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:3px;gap:2px;">
+      <button id="roomTabTimer" onclick="switchRoomTab('timer')" style="padding:6px 14px;border:none;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;background:rgba(255,255,255,.9);color:#1e3a8a;font-family:'Plus Jakarta Sans',sans-serif;">⏱ Stopwatch</button>
+      <button id="roomTabPomodoro" onclick="switchRoomTab('pomodoro')" style="padding:6px 14px;border:none;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;background:transparent;color:rgba(255,255,255,.7);font-family:'Plus Jakarta Sans',sans-serif;">🍅 Pomodoro</button>
+      <button id="roomTabGoals" onclick="switchRoomTab('goals')" style="padding:6px 14px;border:none;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;background:transparent;color:rgba(255,255,255,.7);font-family:'Plus Jakarta Sans',sans-serif;">🎯 Goals</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="sessionOnlineCount" style="background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.35);color:#6ee7b7;padding:5px 11px;border-radius:20px;font-size:.75rem;font-weight:600;">👥 1 in room</div>
+      <div id="sessionDailyGoal" style="background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.35);color:#fbbf24;padding:5px 11px;border-radius:20px;font-size:.75rem;font-weight:600;">🎯 0 / 180 min today</div>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:10;flex:1;display:flex;overflow:hidden;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:20px;position:relative;">
+      <!-- STOPWATCH TAB -->
+      <div id="roomPanel-timer" style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;max-width:380px;">
+        <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:12px 18px;width:100%;backdrop-filter:blur(12px);">
+          <div style="color:rgba(255,255,255,.55);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">📚 Studying</div>
+          <select id="sessionModuleSelect" style="width:100%;background:transparent;border:none;color:#fff;font-size:.92rem;font-weight:600;outline:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+            <option value="" style="color:#000;">— Pick a subject —</option>
+          </select>
+        </div>
+        <div style="text-align:center;">
+          <div id="sessionTimerDisplay" style="font-family:'Fraunces',serif;font-size:5.2rem;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;text-shadow:0 2px 20px rgba(0,0,0,.5);">00:00:00</div>
+          <div id="sessionTimerStatus" style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:7px;"></div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button id="sessionStartBtn" onclick="startSessionTimer()" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;padding:13px 30px;border-radius:14px;font-size:.93rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(5,150,105,.5);font-family:'Plus Jakarta Sans',sans-serif;">▶ Start</button>
+          <button id="sessionPauseBtn" onclick="pauseSessionTimer()" style="display:none;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;padding:13px 30px;border-radius:14px;font-size:.93rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.5);font-family:'Plus Jakarta Sans',sans-serif;">⏸ Pause</button>
+        </div>
+        <div style="width:100%;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="color:rgba(255,255,255,.5);font-size:.72rem;">Today's progress</span>
+            <span id="sessionTodayMins" style="color:#fbbf24;font-size:.72rem;font-weight:700;"></span>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;">
+            <div id="sessionProgressBar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);border-radius:4px;width:0%;transition:width .6s ease;"></div>
+          </div>
+          <div id="sessionDailyReward" style="margin-top:6px;font-size:.72rem;color:rgba(255,255,255,.4);text-align:center;"></div>
+        </div>
+      </div>
+
+      <!-- POMODORO TAB -->
+      <div id="roomPanel-pomodoro" style="display:none;flex-direction:column;align-items:center;gap:18px;width:100%;max-width:380px;">
+        <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:12px 18px;width:100%;backdrop-filter:blur(12px);">
+          <div style="color:rgba(255,255,255,.55);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">📚 Studying</div>
+          <select id="roomPomodoroModule" style="width:100%;background:transparent;border:none;color:#fff;font-size:.92rem;font-weight:600;outline:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+            <option value="" style="color:#000;">— Pick a subject —</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button onclick="setRoomPomodoroPreset(25,this)" class="rpomo-preset active-preset" style="padding:7px 16px;border-radius:20px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.2);color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">25 min</button>
+          <button onclick="setRoomPomodoroPreset(30,this)" class="rpomo-preset" style="padding:7px 16px;border-radius:20px;border:2px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.7);font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">30 min</button>
+          <button onclick="setRoomPomodoroPreset(45,this)" class="rpomo-preset" style="padding:7px 16px;border-radius:20px;border:2px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.7);font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">45 min</button>
+          <button onclick="setRoomPomodoroPreset(60,this)" class="rpomo-preset" style="padding:7px 16px;border-radius:20px;border:2px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.7);font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">60 min</button>
+        </div>
+        <div style="font-family:'Fraunces',serif;font-size:5.2rem;font-weight:900;color:#fff;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.5);" id="roomPomodoroDisplay">25:00</div>
+        <div id="roomPomodoroStatus" style="color:rgba(255,255,255,.5);font-size:.8rem;margin-top:-10px;">Select a subject to start</div>
+        <div style="display:flex;gap:10px;">
+          <button id="roomPomodoroStartBtn" onclick="startRoomPomodoro()" style="background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;padding:12px 28px;border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(239,68,68,.5);font-family:'Plus Jakarta Sans',sans-serif;">🍅 Start</button>
+          <button id="roomPomodoroPauseBtn" onclick="pauseRoomPomodoro()" style="display:none;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);padding:12px 28px;border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">⏸ Pause</button>
+          <button onclick="resetRoomPomodoro()" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);padding:12px 20px;border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">↺</button>
+        </div>
+        <div style="width:100%;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="color:rgba(255,255,255,.5);font-size:.72rem;">Today's progress</span>
+            <span id="roomPomodoroTodayMins" style="color:#fbbf24;font-size:.72rem;font-weight:700;"></span>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;">
+            <div id="roomPomodoroProgressBar" style="height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b);border-radius:4px;width:0%;transition:width .6s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOALS TAB -->
+      <div id="roomPanel-goals" style="display:none;flex-direction:column;gap:14px;width:100%;max-width:480px;max-height:calc(100vh - 180px);overflow-y:auto;padding:4px;">
+        <div style="background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;backdrop-filter:blur(12px);">
+          <div style="color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:700;margin-bottom:12px;">🎯 Session Objective</div>
+          <textarea id="sessionObjective" placeholder="What do you want to achieve this session? e.g. Finish Chapter 4 problems, understand Carnot cycle..." style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:.85rem;padding:10px 14px;min-height:70px;resize:vertical;outline:none;font-family:'Plus Jakarta Sans',sans-serif;"></textarea>
+          <button onclick="saveSessionObjective()" style="margin-top:10px;background:rgba(124,58,237,.4);border:1px solid rgba(124,58,237,.5);color:#c4b5fd;padding:7px 16px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">💾 Save Objective</button>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;backdrop-filter:blur(12px);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:700;">✅ Study Goals</div>
+            <button onclick="toggleAddGoal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);padding:5px 12px;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">+ Add</button>
+          </div>
+          <div id="addGoalForm" style="display:none;margin-bottom:12px;">
+            <input id="newGoalText" placeholder="e.g. Complete 10 past paper questions" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:9px;color:#fff;font-size:.83rem;padding:9px 13px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:7px;">
+            <div style="display:flex;gap:8px;">
+              <select id="newGoalModule" style="flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:9px;color:#fff;font-size:.82rem;padding:8px 10px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;"></select>
+              <button onclick="addStudyGoal()" style="background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;border:none;padding:8px 16px;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Add</button>
+            </div>
+          </div>
+          <div id="goalsList" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="color:rgba(255,255,255,.35);font-size:.8rem;text-align:center;padding:12px;">No goals yet — add one above!</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:18px;backdrop-filter:blur(12px);">
+          <div style="color:#fff;font-family:'Fraunces',serif;font-size:1rem;font-weight:700;margin-bottom:12px;">📝 Session Notes</div>
+          <textarea id="sessionNotesPad" placeholder="Quick notes, ideas, things to follow up on..." style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:.83rem;padding:10px 14px;min-height:80px;resize:vertical;outline:none;font-family:'Plus Jakarta Sans',sans-serif;"></textarea>
+          <button onclick="saveSessionNotes()" style="margin-top:10px;background:rgba(37,99,235,.3);border:1px solid rgba(37,99,235,.5);color:#93c5fd;padding:7px 16px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">💾 Save Notes</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:270px;background:rgba(0,0,0,.25);border-left:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08);">
+        <div style="color:#fff;font-family:'Fraunces',serif;font-size:.95rem;font-weight:700;">🏆 Leaderboard</div>
+        <div style="color:rgba(255,255,255,.35);font-size:.68rem;margin-top:2px;">Updated on pause</div>
+      </div>
+      <div id="sessionLeaderboard" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:7px;"></div>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:10;background:rgba(0,0,0,.3);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.1);padding:12px 20px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="color:#fff;font-weight:700;font-size:.82rem;">📊 Focus Room Study Summary</span>
+      <span style="color:rgba(255,255,255,.4);font-size:.7rem;">— this session</span>
+    </div>
+    <div id="roomSessionSummary" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <span style="color:rgba(255,255,255,.35);font-size:.78rem;">Nothing logged yet — start studying!</span>
+    </div>
+  </div>
+
+  <div id="approvalBar" style="display:none;position:relative;z-index:10;background:rgba(245,158,11,.15);border-top:1px solid rgba(245,158,11,.3);padding:10px 20px;">
+    <div style="color:#fbbf24;font-size:.82rem;font-weight:700;margin-bottom:6px;">⏳ Join Requests</div>
+    <div id="pendingApprovalsList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+</div>
+    </div>
+
+    <!-- Scripts -->
     <script src="js/firebase-config.js" type="module"></script>
     <script src="js/components/utils.js" type="module"></script>
     <script src="js/components/toast.js" type="module"></script>
@@ -192,72 +695,5 @@
     <script src="js/pages/points.js" type="module"></script>
     <script src="js/pages/profile.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
-
-    <!-- Simple verification script -->
-    <script>
-        console.log('🔍 Checking if everything loaded:');
-        
-        setTimeout(() => {
-            console.log('  - Firebase:', window.FS ? '✅' : '❌');
-            console.log('  - doLogin:', typeof window.doLogin === 'function' ? '✅' : '❌');
-            console.log('  - doRegister:', typeof window.doRegister === 'function' ? '✅' : '❌');
-            console.log('  - go function:', typeof window.go === 'function' ? '✅' : '❌');
-            
-            if (!window.FS) {
-                console.error('❌ Firebase not loaded! Check firebase-config.js');
-            }
-            if (typeof window.doLogin !== 'function') {
-                console.error('❌ Auth functions not loaded! Check auth.js');
-            }
-        }, 2000);
-    </script>
-
-    <!-- DEBUG SCRIPT - ADD THIS PART -->
-    <script>
-        console.log('🔍 DEBUG MODE ENABLED');
-        console.log('Open console (F12) to see detailed logs');
-        
-        // Manual test function
-        window.testFirebase = async function() {
-            console.log('🧪 Testing Firebase connection...');
-            try {
-                if (!window.FS) {
-                    console.error('❌ FS object not available!');
-                    return;
-                }
-                // Try to get a test user (this will just check connection)
-                const result = await window.FS.getUser('test123');
-                console.log('✅ Firebase connection successful!');
-                console.log('   (Test user lookup worked)');
-            } catch(e) {
-                console.error('❌ Firebase test failed:', e);
-            }
-        }
-        
-        // Test auth functions
-        window.testAuth = function() {
-            console.log('🧪 Testing auth functions:');
-            console.log('   doLogin:', typeof window.doLogin === 'function' ? '✅' : '❌');
-            console.log('   doRegister:', typeof window.doRegister === 'function' ? '✅' : '❌');
-            console.log('   showForgotPassword:', typeof window.showForgotPassword === 'function' ? '✅' : '❌');
-        }
-        
-        // Run tests after everything loads
-        window.addEventListener('load', function() {
-            console.log('📌 Page fully loaded');
-            setTimeout(() => {
-                window.testFirebase();
-                window.testAuth();
-            }, 1000);
-        });
-        
-        // Add click handlers to show what's happening
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-auth')) {
-                console.log('👆 Button clicked:', e.target.innerText);
-            }
-        });
-    </script>
-    <!-- END DEBUG SCRIPT -->
 </body>
 </html>
