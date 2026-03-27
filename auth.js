@@ -1,17 +1,20 @@
 import { FS } from './firebase-config.js';
-import { showToast, showLoading, hideLoading } from './components/toast.js';
-import { saveToLocal, loadFromLocal } from './components/utils.js';
-import { setCurrentUser, setCurrentUserKey, setModules } from './app.js';
+import { showToast, showLoading, hideLoading } from './toast.js';
+import { saveToLocal, loadFromLocal } from './utils.js';
 
-// Auth state
+// Global state (will be set by app.js)
 let CU = null;
 let CUK = null;
+let setCurrentUserCallback = null;
+let setCurrentUserKeyCallback = null;
+let setModulesCallback = null;
 
 // Initialize auth listeners
 document.addEventListener('DOMContentLoaded', () => {
-  // Set up auth tab switching
-  document.getElementById('authLoginTab').addEventListener('click', () => authTab('login'));
-  document.getElementById('authRegisterTab').addEventListener('click', () => authTab('register'));
+  const loginTab = document.getElementById('authLoginTab');
+  const registerTab = document.getElementById('authRegisterTab');
+  if (loginTab) loginTab.addEventListener('click', () => authTab('login'));
+  if (registerTab) registerTab.addEventListener('click', () => authTab('register'));
 });
 
 // Auth tab switching
@@ -26,8 +29,16 @@ export function authTab(t) {
 
 function setMsg(m, ok) {
   const el = document.getElementById('aMsg');
+  if (!el) return;
   el.textContent = m;
   el.style.color = ok ? 'var(--green)' : 'var(--red)';
+}
+
+// Set callbacks from app.js
+export function setAuthCallbacks(setUser, setUserKey, setMods) {
+  setCurrentUserCallback = setUser;
+  setCurrentUserKeyCallback = setUserKey;
+  setModulesCallback = setMods;
 }
 
 // Login function
@@ -134,10 +145,10 @@ export async function doRegister() {
     setMsg('✓ Account created!', true);
     showToast('Registration Successful', 'Welcome to UB Academic Hub!', 'success');
     
-    // Show setup modal after registration
     setTimeout(() => {
       enterApp(u, userData);
-      document.getElementById('setupMod').classList.add('on');
+      const setupMod = document.getElementById('setupMod');
+      if (setupMod) setupMod.classList.add('on');
     }, 700);
   } catch (e) {
     hideLoading();
@@ -147,38 +158,55 @@ export async function doRegister() {
   }
 }
 
-// Logout function
-export async function doLogout() {
-  // Clear global state
-  setCurrentUser(null);
-  setCurrentUserKey(null);
-  setModules([]);
-  
-  // Clear all intervals
-  if (window._pomodoroInterval) clearInterval(window._pomodoroInterval);
-  if (window._stopwatchInterval) clearInterval(window._stopwatchInterval);
-  
-  // Unsubscribe from all listeners
-  if (window._unsubReqs) window._unsubReqs();
-  if (window._unsubPoints) window._unsubPoints();
-  if (window._unsubGroups) window._unsubGroups();
-  if (window._unsubStudyPosts) window._unsubStudyPosts();
-  if (window._unsubFocusRooms) window._unsubFocusRooms();
-  
-  document.getElementById('appScreen').classList.add('hidden');
-  document.getElementById('authScreen').classList.remove('hidden');
-  document.getElementById('lU').value = '';
-  document.getElementById('lP').value = '';
-  showToast('Logged Out', 'You have been successfully logged out.', 'info');
+// Setup functions
+export function addSetupMod() {
+  const code = document.getElementById('setupCode').value.trim();
+  const name = document.getElementById('setupName').value.trim();
+  if (!code || !name) { alert('Enter both module code and name.'); return; }
+  const list = document.getElementById('setupModList');
+  const chip = document.createElement('div');
+  chip.className = 'mod-chip sel';
+  chip.setAttribute('data-code', code);
+  chip.setAttribute('data-name', name);
+  chip.innerHTML = `<span><strong>${code}</strong> – ${name}</span> <span class="rmv" onclick="this.parentElement.remove()">✕</span>`;
+  list.appendChild(chip);
+  document.getElementById('setupCode').value = '';
+  document.getElementById('setupName').value = '';
+}
+
+export async function saveSetup() {
+  const programme = document.getElementById('setupProg').value.trim();
+  const semester = document.getElementById('setupSem').value;
+  const modChips = document.querySelectorAll('#setupModList .mod-chip');
+  const modules = [];
+  modChips.forEach(chip => {
+    const code = chip.getAttribute('data-code');
+    const name = chip.getAttribute('data-name');
+    if (code && name) {
+      modules.push({ code, name, credits: 3 });
+    }
+  });
+  await FS.setUser(CUK, { programme, semester, modules });
+  if (setModulesCallback) setModulesCallback(modules);
+  document.getElementById('setupMod').classList.remove('on');
+  showToast('Profile Updated', 'Your academic profile has been saved!', 'success');
+  if (window.populateModDropdowns) window.populateModDropdowns();
+}
+
+export function closeSetup() { 
+  const modal = document.getElementById('setupMod');
+  if (modal) modal.classList.remove('on'); 
 }
 
 // Forgot password
 export function showForgotPassword() {
-  document.getElementById('forgotMod').classList.add('on');
+  const modal = document.getElementById('forgotMod');
+  if (modal) modal.classList.add('on');
 }
 
 export function closeForgot() {
-  document.getElementById('forgotMod').classList.remove('on');
+  const modal = document.getElementById('forgotMod');
+  if (modal) modal.classList.remove('on');
   document.getElementById('fU').value = '';
   document.getElementById('fW').value = '';
 }
@@ -205,13 +233,45 @@ export async function resetPassword() {
     await FS.setUser(u, { password: tempPass });
     
     hideLoading();
-    alert(`Your temporary password is: ${tempPass}\n\nPlease change it after logging in.`);
+    alert(`Your temporary password is: ${tempPass}\n\nWrite this down and use it to sign in, then change your password.`);
     closeForgot();
-    showToast('Password Reset', 'Temporary password sent. Check your WhatsApp.', 'info');
+    showToast('Password Reset', 'Temporary password generated — use it to sign in.', 'info');
   } catch (e) {
     hideLoading();
     alert('An error occurred. Please try again.');
   }
+}
+
+// Logout function
+export async function doLogout() {
+  // Clear global state
+  if (setCurrentUserCallback) setCurrentUserCallback(null);
+  if (setCurrentUserKeyCallback) setCurrentUserKeyCallback(null);
+  if (setModulesCallback) setModulesCallback([]);
+  
+  // Clear all intervals
+  if (window._pomodoroInterval) clearInterval(window._pomodoroInterval);
+  if (window._stopwatchInterval) clearInterval(window._stopwatchInterval);
+  if (window._sessionLiveTick) clearInterval(window._sessionLiveTick);
+  
+  // Unsubscribe from all listeners
+  if (window._unsubReqs) window._unsubReqs();
+  if (window._unsubPoints) window._unsubPoints();
+  if (window._unsubGroups) window._unsubGroups();
+  if (window._unsubStudyPosts) window._unsubStudyPosts();
+  if (window._unsubFocusRooms) window._unsubFocusRooms();
+  
+  const appScreen = document.getElementById('appScreen');
+  const authScreen = document.getElementById('authScreen');
+  if (appScreen) appScreen.classList.add('hidden');
+  if (authScreen) authScreen.classList.remove('hidden');
+  
+  const lU = document.getElementById('lU');
+  const lP = document.getElementById('lP');
+  if (lU) lU.value = '';
+  if (lP) lP.value = '';
+  
+  showToast('Logged Out', 'You have been successfully logged out.', 'info');
 }
 
 // App entry point
@@ -227,9 +287,12 @@ async function enterApp(u, userData) {
     });
   }
   
-  setCurrentUserKey(u);
-  setCurrentUser(userData);
-  setModules(userData.modules || []);
+  CU = userData;
+  CUK = u;
+  
+  if (setCurrentUserCallback) setCurrentUserCallback(userData);
+  if (setCurrentUserKeyCallback) setCurrentUserKeyCallback(u);
+  if (setModulesCallback) setModulesCallback(userData.modules || []);
   
   // Update UI
   const ini = userData.name[0].toUpperCase();
@@ -238,25 +301,31 @@ async function enterApp(u, userData) {
     if (el) el.textContent = ini; 
   });
   
-  document.getElementById('sbUname').textContent = userData.name.split(' ')[0];
-  document.getElementById('pWA').value = userData.wa || '';
+  const sbUname = document.getElementById('sbUname');
+  if (sbUname) sbUname.textContent = userData.name.split(' ')[0];
+  
+  const pWA = document.getElementById('pWA');
+  if (pWA) pWA.value = userData.wa || '';
   
   // Show app, hide auth
-  document.getElementById('authScreen').classList.add('hidden');
-  document.getElementById('appScreen').classList.remove('hidden');
+  const authScreen = document.getElementById('authScreen');
+  const appScreen = document.getElementById('appScreen');
+  if (authScreen) authScreen.classList.add('hidden');
+  if (appScreen) appScreen.classList.remove('hidden');
   
   // Navigate to home
-  window.go('home');
+  if (window.go) window.go('home');
   
   // Show setup modal if no programme set
   if (!userData.programme || userData.programme === '') {
     setTimeout(() => {
-      document.getElementById('setupMod').classList.add('on');
+      const setupMod = document.getElementById('setupMod');
+      if (setupMod) setupMod.classList.add('on');
     }, 800);
   }
 }
 
-// Make functions globally available
+// Make all functions globally available
 window.authTab = authTab;
 window.doLogin = doLogin;
 window.doRegister = doRegister;
@@ -264,3 +333,6 @@ window.doLogout = doLogout;
 window.showForgotPassword = showForgotPassword;
 window.closeForgot = closeForgot;
 window.resetPassword = resetPassword;
+window.addSetupMod = addSetupMod;
+window.saveSetup = saveSetup;
+window.closeSetup = closeSetup;
