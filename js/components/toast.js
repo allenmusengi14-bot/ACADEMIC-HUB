@@ -37,7 +37,7 @@ export function showLoading(msg = 'Loading...') {
 
 export function hideLoading() { 
   const el = document.getElementById('_loadOverlay'); 
-  if(el) el.style.display='none'; 
+  if(el) el.style.display = 'none'; 
 }
 
 // Make globally available
