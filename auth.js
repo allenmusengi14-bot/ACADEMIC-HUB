@@ -9,6 +9,23 @@ let setCurrentUserCallback = null;
 let setCurrentUserKeyCallback = null;
 let setModulesCallback = null;
 
+// Wait for Firebase to be ready
+async function waitForFS() {
+  if (window.FS) return;
+  const msgEl = document.getElementById('fsStatus');
+  if (msgEl) msgEl.textContent = '⏳ Connecting to server...';
+  
+  await new Promise(resolve => {
+    if (window.FS) { resolve(); return; }
+    document.addEventListener('fs-ready', resolve, { once: true });
+    setTimeout(resolve, 10000);
+  });
+  
+  if (!window.FS) throw new Error('Could not connect. Please refresh.');
+  if (msgEl) msgEl.textContent = '✅ Ready — you can sign in';
+  setTimeout(() => { if (msgEl) msgEl.style.display = 'none'; }, 3000);
+}
+
 // Initialize auth listeners
 document.addEventListener('DOMContentLoaded', () => {
   const loginTab = document.getElementById('authLoginTab');
@@ -43,11 +60,6 @@ export function setAuthCallbacks(setUser, setUserKey, setMods) {
 
 // Login function
 export async function doLogin() {
-  if (!window.FS) { 
-    setMsg('Still connecting... please wait.'); 
-    return;
-  }
-  
   const u = document.getElementById('lU').value.trim();
   const p = document.getElementById('lP').value;
   const remember = document.getElementById('rememberMe').checked;
@@ -65,6 +77,7 @@ export async function doLogin() {
   showLoading('Signing in...');
   
   try {
+    await waitForFS();
     const user = await FS.getUser(u);
     if (!user || user.password !== p) {
       hideLoading();
@@ -83,6 +96,7 @@ export async function doLogin() {
     showToast('Welcome back!', `Good to see you, ${user.name.split(' ')[0]}!`, 'success');
   } catch (e) {
     hideLoading();
+    console.error('Login error:', e);
     setMsg('Connection error. Check your internet.');
     showToast('Login Failed', 'Please check your connection and try again.', 'error');
   }
@@ -90,11 +104,6 @@ export async function doLogin() {
 
 // Register function
 export async function doRegister() {
-  if (!window.FS) { 
-    setMsg('Still connecting... please wait.'); 
-    return; 
-  }
-  
   const n = document.getElementById('rN').value.trim();
   const u = document.getElementById('rU').value.trim();
   const w = document.getElementById('rW').value.trim();
@@ -125,6 +134,7 @@ export async function doRegister() {
   showLoading('Creating your account...');
   
   try {
+    await waitForFS();
     const existing = await FS.getUser(u);
     if (existing) {
       hideLoading();
@@ -152,7 +162,7 @@ export async function doRegister() {
     }, 700);
   } catch (e) {
     hideLoading();
-    console.error(e);
+    console.error('Registration error:', e);
     setMsg('Connection error. Check your internet.');
     showToast('Registration Failed', 'Please try again later.', 'error');
   }
@@ -222,6 +232,7 @@ export async function resetPassword() {
   
   showLoading('Processing...');
   try {
+    await waitForFS();
     const user = await FS.getUser(u);
     if (!user || user.wa !== w) {
       hideLoading();
@@ -276,17 +287,6 @@ export async function doLogout() {
 
 // App entry point
 async function enterApp(u, userData) {
-  if (!window.FS) {
-    await new Promise(resolve => {
-      if (window._fsReady) { 
-        resolve(); 
-        return; 
-      }
-      document.addEventListener('fs-ready', resolve, { once: true });
-      setTimeout(resolve, 8000);
-    });
-  }
-  
   CU = userData;
   CUK = u;
   
