@@ -680,22 +680,25 @@
     </div>
 
     <!-- Scripts -->
-        <!-- Scripts - All modules loaded in correct order -->
     <script src="js/firebase-config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>
     <script src="js/toast.js" type="module"></script>
     <script src="js/auth.js" type="module"></script>
     <script src="js/app.js" type="module"></script>
+    <script src="js/home.js" type="module"></script>
     
-    <!-- Bootstrap script to ensure all functions are available globally -->
+    <!-- Bootstrap script to attach all functions to window -->
     <script type="module">
       import * as auth from './js/auth.js';
       import * as app from './js/app.js';
       import * as utils from './js/utils.js';
       import * as toast from './js/toast.js';
+      import * as home from './js/home.js';
       
       // Attach all exported functions to window
-      Object.assign(window, auth, app, utils, toast);
+      Object.assign(window, auth, app, utils, toast, home);
       
       console.log('✅ All modules loaded and attached to window');
+      console.log('✅ doLogin function:', typeof window.doLogin);
+      console.log('✅ FS object:', typeof window.FS);
     </script>
