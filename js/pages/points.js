@@ -1,6 +1,6 @@
-import { CU, CUK, mods, _points } from '../app.js';
-import { FS } from '../firebase-config.js';
-import { showToast, calculatePoints } from '../components/utils.js';
+import { CU, CUK, mods, _points } from './app.js.js';
+import { FS } from './firebase-config.js.js';
+import { showToast, calculatePoints } from './utils.js.js';
 
 // Render Points page
 export function renderPointsPage() {
