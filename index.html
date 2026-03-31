@@ -91,7 +91,7 @@
 
     <!-- App Screen -->
     <div id="appScreen" class="hidden">
-        <div class="sidebar-overlay" id="sbOverlay" onclick="window.closeSidebar()"></div>
+        <div class="sidebar-overlay" id="sbOverlay" onclick="if(window.closeSB)window.closeSB()"></div>
         
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
@@ -104,7 +104,7 @@
                             <div class="sb-sub">University of Botswana</div>
                         </div>
                     </div>
-                    <button onclick="window.toggleSidebar()" id="sbToggleBtn" title="Collapse sidebar"
+                    <button onclick="if(window.toggleSB)window.toggleSB()" id="sbToggleBtn" title="Collapse sidebar"
                         style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);
                         width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;
                         justify-content:center;flex-shrink:0;transition:all .2s;">◀</button>
@@ -154,13 +154,13 @@
         <!-- Main Content -->
         <div class="main">
             <div class="topbar">
-                <button class="topbar-menu" onclick="window.openSidebar()">☰</button>
+                <button class="topbar-menu" onclick="if(window.openSB)window.openSB()">☰</button>
                 <span class="topbar-title" id="topTitle">Home</span>
                 <div class="topbar-av" id="topAv">A</div>
             </div>
             
             <!-- Desktop "open sidebar" button -->
-            <button id="sidebarOpenBtn" onclick="window.toggleSidebar()" title="Open sidebar"
+            <button id="sidebarOpenBtn" onclick="if(window.toggleSB)window.toggleSB()" title="Open sidebar"
                 style="display:none;position:fixed;left:16px;top:16px;z-index:48;
                 width:42px;height:42px;border-radius:12px;
                 background:linear-gradient(135deg,#0f172a,#1e1b4b);
@@ -679,26 +679,37 @@
 </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- IMPORTANT: Scripts load in this exact order.
+         firebase-config.js runs first and sets window.FS + dispatches 'fs-ready'.
+         auth.js runs second so login/register are available immediately.
+         All other page modules load after. -->
+
+    <!-- Spin animation needed by auth.js loading overlay -->
+    <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- 1. Firebase — sets window.FS, window._fsReady, fires 'fs-ready' -->
     <script src="js/firebase-config.js" type="module"></script>
+
+    <!-- 2. Utilities (no dependencies) -->
     <script src="js/utils.js" type="module"></script>
-    <script src="js/toast.js" type="module"></script>
+    <script src="js/components/toast.js" type="module"></script>
+
+    <!-- 3. Auth — must come before page modules so window.doLogin etc. exist -->
     <script src="js/auth.js" type="module"></script>
+
+    <!-- 4. App shell & page modules -->
     <script src="js/app.js" type="module"></script>
-    <script src="js/home.js" type="module"></script>
-    
-    <!-- Bootstrap script to attach all functions to window -->
-    <script type="module">
-      import * as auth from './js/auth.js';
-      import * as app from './js/app.js';
-      import * as utils from './js/utils.js';
-      import * as toast from './js/toast.js';
-      import * as home from './js/home.js';
-      
-      // Attach all exported functions to window
-      Object.assign(window, auth, app, utils, toast, home);
-      
-      console.log('✅ All modules loaded and attached to window');
-      console.log('✅ doLogin function:', typeof window.doLogin);
-      console.log('✅ FS object:', typeof window.FS);
-    </script>
+    <script src="js/pages/home.js" type="module"></script>
+    <script src="js/pages/gpa.js" type="module"></script>
+    <script src="js/pages/study.js" type="module"></script>
+    <script src="js/pages/streak.js" type="module"></script>
+    <script src="js/pages/peer.js" type="module"></script>
+    <script src="js/pages/tutors.js" type="module"></script>
+    <script src="js/pages/squad.js" type="module"></script>
+    <script src="js/pages/rooms.js" type="module"></script>
+    <script src="js/pages/points.js" type="module"></script>
+    <script src="js/pages/profile.js" type="module"></script>
+</body>
+</html>
